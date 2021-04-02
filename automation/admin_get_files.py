@@ -18,13 +18,15 @@ from classes.selenium_class import Browser
 
 from paths import *
 
-class GET_FILES(PyautoGUI, Browser):
+class GET_FILES(Browser, PyautoGUI):
   def __init__(self, driver):
+    # super().__init__()
     self.driver = driver
 
   def searching(self):
     try:
       # 매니저 전체 선택
+      print(len(self.driver.window_handles))
       self.driver.find_element_by_xpath('//*[@id="selected_manager_name"]').click()
       ul_select = self.driver.find_element_by_xpath('//*[@id="form"]/div[1]/div[1]/div/div[4]/div/ul')
       li_select = ul_select.find_elements_by_tag_name('li')

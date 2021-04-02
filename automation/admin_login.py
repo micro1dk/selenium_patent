@@ -13,14 +13,14 @@ from classes.selenium_class import Browser
 
 from paths import *
 
-class Login(PyautoGUI):
+class Login(Browser):
   def __init__(self, driver):
     # super().__init__()
     self.driver = driver
   
-  def connect_URL(driver, url):
+  def connect_URL(self, url):
     try:
-      driver.get(url)
+      self.visit(url)
       return True
     except Exception as e:
       return False
@@ -28,7 +28,7 @@ class Login(PyautoGUI):
   def cookie_setting(self, path):
     try:
       cookies = pickle.load(open(path, 'rb'))
-      self.driver.get('https://markinfo.co.kr/markinfo')
+      self.visit('https://markinfo.co.kr/markinfo')
       for cookie in cookies:
         self.driver.add_cookie(cookie)
       return True
@@ -37,37 +37,30 @@ class Login(PyautoGUI):
   
   def user_setting(self, path, url, username, password):
     if self.cookie_setting(path): # 쿠키 있으면 통과
-      print('있음')
       if not self.connect_URL(url):
-        # print('연결안됨')
-        # self.login(path, username, password)
-        self.driver.get(url)
+        self.login(path, username, password)
+        self.visit(url)
       else:
-        print('연결됨')
         success, alert = self.exist_alert()
         if success:
           self.accept_alert(alert)
           self.login(path, username, password)
-          self.driver.get(url)
-        # else:
+          self.visit(url)
     else: # 쿠키 없으면 로그인
-      print('업음')
       self.login(path, username, password)
-      self.driver.get(url)
+      self.visit(url)
   
   def save_cookies(self, path):
     cookies = self.driver.get_cookies()
     pickle.dump(cookies, open(path, 'wb'))
 
   def login(self, path, username, password):
-    self.driver.get('https://markinfo.co.kr/front/nanmin/phtml/login.php')
+    # self.visit('https://markinfo.co.kr/front/nanmin/phtml/login.php')
     self.driver.find_element_by_xpath('//*[@id="id"]').send_keys(username)
     self.driver.find_element_by_xpath('//*[@id="pwd"]').send_keys(password)
     self.driver.find_element_by_xpath('//*[@id="loginFrm"]/fieldset/p/button').click()
     self.save_cookies(path)
   
-  
-
   def user_login(self):
     """
     로그인 메인 메서드

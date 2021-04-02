@@ -27,6 +27,32 @@ class PyautoGUI:
       t += delay
       if t >= timeout:
         return False, None
+
+  def wait_image_invisible(self, png, delay, timeout):
+    def exc():
+      try:
+        if str(type(png)) == "<class 'list'>":
+          for p in png:  
+            element = pyautogui.locateOnScreen(p)
+            if element:
+              return False
+        elif str(type(png)) == "<class 'str'>":
+          element = pyautogui.locateOnScreen(png)
+          if element:
+            return False
+        return True
+      except Exception as e:
+        # print(e)
+        return False
+
+    t = 0
+    while t < timeout:
+      success = exc()
+      if success:
+        return True
+      time.sleep(delay)
+      t += delay
+    return False
   
   def click_image(self, png, err_msg, delay, timeout, raise_error):
     """
@@ -34,7 +60,7 @@ class PyautoGUI:
     있으면 클릭
     없으면 에러를 발생시킴
     """
-    success, element = self.wait_element_visible(png, delay, timeout)
+    success, element = self.wait_image_visible(png, delay, timeout)
     print(f'{png}있는가? {success}')
     time.sleep(0.3)
     if success:
@@ -42,7 +68,7 @@ class PyautoGUI:
       return True
 
     if raise_error:
-      raise Exception(err_msg)
+      raise Exception('이미지 클릭실패 : ' + err_msg)
     return False
 
   def move_mouse(self, png, err, delay, timeout):
@@ -51,7 +77,7 @@ class PyautoGUI:
     있으면 True
     없으면 FAlse를 반환
     """
-    success, element = self.wait_element_visible(png, delay, timeout)
+    success, element = self.wait_image_visible(png, delay, timeout)
     time.sleep(0.3)
     if success:
       pyautogui.moveTo(element)
