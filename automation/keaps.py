@@ -7,8 +7,6 @@ import shutil
 import getpass
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 
-import pyautogui
-import pyperclip
 from classes.pyautogui_class import PyautoGUI
 
 from paths import *
@@ -83,7 +81,7 @@ class Keaps(PyautoGUI):
 
       # # 아래로 버튼
       while True:
-        pyautogui.click(x=1897, y=986, interval=0.5, clicks=3)
+        self.click_position(x=1897, y=986, interval=0.5, clicks=3)
         # 첨부서류 입력 누르기 -> 첨부서류 정보 창 open
         elem = self.click_image(
           [f'{self.IMAGE_PATH}\\document_1.PNG', f'{self.IMAGE_PATH}\\document_2.PNG'],
@@ -93,7 +91,7 @@ class Keaps(PyautoGUI):
       
       # 첨부서류 정보 창에서 기타첨부서류로 이동
       time.sleep(1)
-      pyautogui.press(['down'] * 18)
+      self.press(['down'] * 18)
       
       # 첨부서류 정보에서 찾기버튼 클릭 -> 윈도우 open 다이얼로그 창
       self.click_image(
@@ -106,11 +104,11 @@ class Keaps(PyautoGUI):
         f'{self.IMAGE_PATH}\\attachment_att.PNG',
         'wait element visible 에러: attachment_att.PNG와 일치하는 이미지가 없음 (다이얼로그에서 확장자 바꾸는 칸)', 0.5, 3, True
       )
-      pyautogui.press(['down', 'enter'])
-      pyautogui.hotkey('alt', 'n')
-      pyperclip.copy(f'{folder_path}\\warrant.pdf')
-      pyautogui.hotkey('ctrl', 'v')
-      pyautogui.press(['enter'])
+      self.press(['down', 'enter'])
+      self.hotkey('alt', 'n')
+      self.pyper_copy(f'{folder_path}\\warrant.pdf')
+      self.hotkey('ctrl', 'v')
+      self.press(['enter'])
       z = self.wait_image_invisible(
         [f'{self.IMAGE_PATH}\\attachment_open_1.PNG', f'{self.IMAGE_PATH}\\attachment_open_2.PNG'],
         0.5, 3
@@ -146,9 +144,9 @@ class Keaps(PyautoGUI):
         'wait element visible 에러: search_btn.PNG와 일치하는 이미지가 없음 (상표견본찾기에서 파일 찾기버튼)', 0.5, 3, True
       )
       # 파일경로 입력 후 열기
-      pyperclip.copy(f'{folder_path}\\logo_{classify}.jpg')
-      pyautogui.hotkey('ctrl', 'v')
-      pyautogui.press(['enter'])
+      self.pyper_copy(f'{folder_path}\\logo_{classify}.jpg')
+      self.hotkey('ctrl', 'v')
+      self.press(['enter'])
 
       # 완료버튼 클릭
       self.click_image(
@@ -185,20 +183,20 @@ class Keaps(PyautoGUI):
       # print('견본이미지와 일치?')
       
       # # 견본이미지와 일치하는지?
-      # pyautogui.doubleClick(x=574, y=290)
+      # self.doubleClick(x=574, y=290)
       # time.sleep(0.5)
-      # # mark_image = pyautogui.locateOnScreen(f'{self.IMAGE_PATH}\\ttt.jpg') # 테스트용 일치하지 않는 이미지
-      # mark_image = pyautogui.locateOnScreen(f'{folder_path}\\logo_{classify}.jpg')
+      # # mark_image = self.locateOnScreen(f'{self.IMAGE_PATH}\\ttt.jpg') # 테스트용 일치하지 않는 이미지
+      # mark_image = self.locateOnScreen(f'{folder_path}\\logo_{classify}.jpg')
       # if not mark_image:
       #   raise Exception('상표견본 이미지와 일치하지 않음')
-      # pyautogui.hotkey('alt', 'f4')
+      # self.hotkey('alt', 'f4')
       
       # 일치하면 서지사항으로 간 뒤 인쇄창 띄우고 pdf 저장하기
       self.click_image(
         f'{self.IMAGE_PATH}\\viewer_this.PNG',
         'wait element visible 에러: viewer_this.PNG와 일치하는 이미지가 없음 (서지사항)', 0.5, 3, True
       )
-      pyautogui.hotkey('ctrl', 'p')
+      self.hotkey('ctrl', 'p')
 
       # 프린터 선택하기
       self.click_image(
@@ -217,10 +215,10 @@ class Keaps(PyautoGUI):
         'wait element visible 에러: viewer_print.PNG와 일치하는 이미지가 없음 (인쇄 확인버튼)', 0.5, 3, True
       )
 
-      pyautogui.hotkey('alt', 'n') # 파일이름 선택
-      pyperclip.copy(f'{folder_path}\\1-{classify}.pdf')
-      pyautogui.hotkey('ctrl', 'v')
-      pyautogui.press(['enter'])
+      self.hotkey('alt', 'n') # 파일이름 선택
+      self.pyper_copy(f'{folder_path}\\1-{classify}.pdf')
+      self.hotkey('ctrl', 'v')
+      self.press(['enter'])
 
       # 통합뷰어 닫기
       self.click_image(

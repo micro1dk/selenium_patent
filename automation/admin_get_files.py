@@ -9,9 +9,6 @@ from datetime import datetime, timedelta, date
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 
 import requests
-import pyperclip
-import pyautogui
-from selenium.webdriver.common.by import By
 
 from classes.pyautogui_class import PyautoGUI
 from classes.selenium_class import Browser
@@ -159,7 +156,7 @@ class GET_FILES(Browser, PyautoGUI):
 
   def download_pdf(self):
     try:
-      self.wait_element_clickable(By.XPATH, '/html/body/div[2]/div/div[3]/div/div[2]/div[2]/ul[1]/li[2]/a', 10)
+      self.wait_element_clickable('xpath', '/html/body/div[2]/div/div[3]/div/div[2]/div[2]/ul[1]/li[2]/a', 10)
       self.driver.find_element_by_xpath('/html/body/div[2]/div/div[3]/div/div[2]/div[2]/ul[1]/li[2]/a').click()
       sign_text = self.driver.find_element_by_xpath('//*[@id="tab-2"]/div/table[1]/tbody/tr[4]/td[1]/div/button[1]').text
       if sign_text == '만들기':
@@ -171,7 +168,7 @@ class GET_FILES(Browser, PyautoGUI):
         if not success_wait_new_window:
           raise Exception('인감만들기창이 뜨지 않아')
         self.driver.switch_to.window(self.driver.window_handles[2]) # 인감만들기창으로 이동
-        self.wait_element_visible(By.XPATH, '//*[@id="form"]/div[1]/div[2]/button', 7)
+        self.wait_element_visible('xpath', '//*[@id="form"]/div[1]/div[2]/button', 7)
         self.driver.find_element_by_xpath('//*[@id="form"]/div[1]/div[2]/button').click()
         
         self.driver.close()
@@ -187,7 +184,7 @@ class GET_FILES(Browser, PyautoGUI):
         self.driver.find_element_by_xpath('//*[@id="tab-2"]/div/table[1]/tbody/tr[4]/td[1]/div/button[2]').click()
         self.wait_new_window(3, 0.3, 3)
         self.driver.switch_to.window(self.driver.window_handles[2]) # 인감 업로드 창으로 이동
-        self.wait_element_visible(By.XPATH, '//*[@id="form"]/div/input', 7)
+        self.wait_element_visible('xpath', '//*[@id="form"]/div/input', 7)
         self.driver.find_element_by_xpath('//*[@id="form"]/div/input').send_keys(f'{DOWNLOAD_PATH}\\stamp.jpg')
         self.driver.find_element_by_xpath('//*[@id="upload_file_seal"]').click()
         success, alert = self.exist_alert()
@@ -195,7 +192,7 @@ class GET_FILES(Browser, PyautoGUI):
           self.accept_alert(alert)
         time.sleep(1)
         self.driver.switch_to.window(self.driver.window_handles[1]) # 인감 업로드 창으로 이동
-      
+
       self.driver.find_element_by_xpath('/html/body/div[2]/div/div[3]/div/div[2]/div[1]/table/tbody/tr[1]/td[1]/div[3]/button[4]').click()
       success, alert = self.exist_alert()
       if success:
@@ -208,14 +205,14 @@ class GET_FILES(Browser, PyautoGUI):
       self.wait_image_visible(f'{CURRENT_PATH}\\images\\adminpage\\adminpage_pdf_down.PNG', 0.5, 10)
       self.driver.execute_script('window.print();')
       time.sleep(1)
-      pyautogui.press(['enter'])
+      self.press(['enter'])
       self.wait_image_visible(f'{CURRENT_PATH}\\images\\adminpage\\adminpage_save_start.PNG', 0.5, 10)
-      pyperclip.copy(f'{DOWNLOAD_PATH}\\temp\\warrant.pdf')
-      pyautogui.hotkey('alt', 'n')
-      pyautogui.hotkey('ctrl', 'v')
-      pyautogui.press(['enter'])
+      self.pyper_copy(f'{DOWNLOAD_PATH}\\temp\\warrant.pdf')
+      self.hotkey('alt', 'n')
+      self.hotkey('ctrl', 'v')
+      self.press(['enter'])
       self.wait_download('warrant.pdf', 0.5, 15)
-      
+
       if 'stamp.jpg' in os.listdir(DOWNLOAD_PATH):
         os.remove(f'{DOWNLOAD_PATH}\\stamp.jpg') # 인감이미지 삭제
       self.driver.close()
@@ -277,7 +274,7 @@ class GET_FILES(Browser, PyautoGUI):
         print('개발모드')
         self.driver.execute_script(f'window.open("{url}", "new window")')
         self.driver.switch_to.window(self.driver.window_handles[1])
-      self.wait_element_visible(By.XPATH, '//*[@id="tab-4"]/div[2]', 10)
+      self.wait_element_visible('xpath', '//*[@id="tab-4"]/div[2]', 10)
       table_container = self.driver.find_element_by_xpath('//*[@id="tab-4"]/div[2]')
       tables = table_container.find_elements_by_tag_name('table')
 

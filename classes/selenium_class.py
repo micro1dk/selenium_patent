@@ -40,30 +40,27 @@ chrome_options.add_experimental_option("prefs", {
 class Browser:
   def __init__(self):
     self.driver = webdriver.Chrome(executable_path=CHROMEDRIVER_PATH, chrome_options=chrome_options)
-  
+
   def visit(self, url):
     self.driver.get(url)
+  
+  def str_to_by(self, string):
+    if string == 'xpath':
+      return By.XPATH
+    elif string == 'id':
+      return By.ID
+    elif string == 'class':
+      return By.CLASS_NAME
+    elif string == 'tag':
+      return By.TAG_NAME
 
   def click(self, by, selector, timeout=7):
-    self.wait_element_visible(by, selector, timeout)
+    self.wait_element_visible(self.str_to_by(by), selector, timeout)
     if by == By.XPATH:
-      self.driver.find_element_by_xpath(selector).click()
-    elif by == By.ID:
-      self.driver.find_element_by_id(selector).click()
-    elif by == By.CLASS_NAME:
-      self.driver.find_element_by_class_name(selector).click()
-    elif by == By.TAG_NAME:
-      self.driver.find_element_by_tag_name(selector).click()
+      self.driver.find_element(self.str_to_by(by), selector).click()
 
   def type_keys(self, by, selector, string):
-    if by == By.XPATH:
-      self.driver.find_element_by_xpath(selector).send_keys(string)
-    elif by == By.ID:
-      self.driver.find_element_by_id(selector).send_keys(string)
-    elif by == By.CLASS_NAME:
-      self.driver.find_element_by_class_name(selector).send_keys(string)
-    elif by == By.TAG_NAME:
-      self.driver.find_element_by_tag_name(selector).send_keys(string)
+    self.driver.find_element(self.str_to_by(by), selector).send_keys(string)
 
   ### alert 함수
   def wait_alert(self):
@@ -88,19 +85,19 @@ class Browser:
     alert.accept()
 
   ### 로딩함수
-  def wait_element_visible(self, by, selector, timeout):
+  def wait_element_visible(self, by, selector, timeout=7):
     WebDriverWait(self.driver, timeout).until(
       EC.visibility_of_element_located((by, selector))
     )
-  def wait_element_presence(self, by, selector, timeout):
+  def wait_element_presence(self, by, selector, timeout=7):
     WebDriverWait(self.driver, timeout).until(
       EC.presence_of_element_located((by, selector))
     )
-  def wait_element_inivisible(self, by, selector, timeout):
+  def wait_element_inivisible(self, by, selector, timeout=7):
     WebDriverWait(self.driver, timeout).until(
       EC.invisibility_of_element_located((by, selector))
     )
-  def wait_new_window(self, length, delay, timeout):
+  def wait_new_window(self, length, delay, timeout=7):
     t = 0
     while True:
       if len(self.driver.window_handles) >= length:
@@ -109,7 +106,7 @@ class Browser:
       t += delay
       if t >= timeout:
         return False
-  def wait_element_clickable(self, by, selector, timeout):
+  def wait_element_clickable(self, by, selector, timeout=7):
     WebDriverWait(self.driver, timeout).until(
       EC.element_to_be_clickable((by, selector))
     )
@@ -117,3 +114,18 @@ class Browser:
   ### 스위치 함수
   def switch_windows(self, n):
     self.driver.switch_to.window(self.driver.window_handles[n - 1])
+
+  def select_element(self, by, selector, value):
+    """
+    셀렉트 박스에서 어떤 값을 선택
+    """
+    select = Select(self.driver.find_element(self.str_to_by(by), selector))
+    select.select_by_value(value)
+
+  def exist_element(self, by, selector):
+    try:
+      t = self.driver.find_element(self.str_to_by(by), selector)
+      del t
+      return True
+    except:
+      return False

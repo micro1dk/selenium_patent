@@ -1,5 +1,6 @@
 import time
 import pyautogui
+import pyperclip
 
 class PyautoGUI:
   def __init__(self):
@@ -86,3 +87,25 @@ class PyautoGUI:
     if raise_error:
       raise Exception(err_msg)
     return False
+  
+  def hotkey(self, a, b):
+    """
+    a: ctrl, alt, shift 등등
+    b: 나머지 키
+    """
+    pyautogui.hotkey(a, b)
+  
+  def press(self, l):
+    """
+    l: 동작리스트 입력
+    """
+    pyautogui.press(l)
+
+  def pyper_copy(self, string):
+    pyperclip.copy(string)
+
+  def pyper_paste(self):
+    return pyperclip.paste()
+
+  def click_position(self, x, y, interval, clicks):
+    pyautogui.click(x, y, interval=interval, clicks=clicks)
