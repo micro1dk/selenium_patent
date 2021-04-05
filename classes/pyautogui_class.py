@@ -66,7 +66,7 @@ class PyautoGUI:
     if success:
       pyautogui.click(element)
       return True
-.
+
     if raise_error:
       raise Exception('이미지 클릭실패 : ' + err_msg)
     return False
