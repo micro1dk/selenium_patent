@@ -61,12 +61,12 @@ class PyautoGUI:
     없으면 에러를 발생시킴
     """
     success, element = self.wait_image_visible(png, delay, timeout)
-    print(f'{png}있는가? {success}')
+    # print(f'{png}있는가? {success}')
     time.sleep(0.3)
     if success:
       pyautogui.click(element)
       return True
-
+.
     if raise_error:
       raise Exception('이미지 클릭실패 : ' + err_msg)
     return False

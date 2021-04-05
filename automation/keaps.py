@@ -70,6 +70,9 @@ class Keaps(PyautoGUI):
   
           
   def start_one(self, folder_path, application_path, classify):
+    print('===================')
+    print(classify, ' and ' , folder_path)
+    print('===================')
     try:
       # 파일 실행 - 폴더별 순회 bib실행, 현재는 bib 하나일때만
       self.start_application(application_path)

@@ -122,7 +122,7 @@ class GET_FILES(Browser, PyautoGUI):
         classify = bib_classifies[i].get_attribute('value')
         btn.click()
         success_download = self.wait_download(f'BIB_{classify}.BIB')
-        time.sleep(0.5)
+        time.sleep(1.3)
       if not success_download:
         raise Exception('bib 다운로드 실패함')
     except Exception as e:
@@ -287,7 +287,7 @@ class GET_FILES(Browser, PyautoGUI):
         # 다운로드 시작
   
       self.download_bib() # 다운로드 완료를 기다려야 할듯..
-    
+      
       # 이미지 다운로드
       self.download_image()
       
