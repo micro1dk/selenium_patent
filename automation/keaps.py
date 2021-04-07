@@ -1,10 +1,6 @@
 import os
 import sys
 import time
-import json
-import pickle
-import shutil
-import getpass
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 
 from classes.pyautogui_class import PyautoGUI
@@ -27,7 +23,6 @@ class Keaps(PyautoGUI):
 
   def kill_application(self):
     os.system('taskkill /IM nkeaps* /F /T')
-  
   
   def script_keaps(self):
     try:
@@ -229,8 +224,6 @@ class Keaps(PyautoGUI):
         f'{self.IMAGE_PATH}\\viewer_close_2.PNG',
         'wait element visible 에러: viewer_close_2.PNG와 일치하는 이미지가 없음 (왼쪽 상단 버튼 누른 뒤 닫기버튼)', 0.5, 3, True
       )
-
-      # 
 
       # self.kill_application()
       # print('끝')

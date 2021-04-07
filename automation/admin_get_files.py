@@ -1,11 +1,7 @@
 import os
 import sys
 import time
-import json
-import pickle
 import shutil
-import getpass
-from datetime import datetime, timedelta, date
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 
 import requests
@@ -78,35 +74,8 @@ class GET_FILES(Browser, PyautoGUI):
         i += 1
       
     except Exception as e:
-      print(f'매니저 전체 클릭 후 검색에서 에러\n{e}')
-  
-  def wait_download(self, filename, delay=1, limit=15):
-    file_list = os.listdir(f'{DOWNLOAD_PATH}\\temp')
-    if len(file_list) > 0:
-      for d in file_list:
-        os.remove(f'{DOWNLOAD_PATH}\\temp\\{d}')
-
-    t = 0
-    while True:
-      print(len(os.listdir(f'{DOWNLOAD_PATH}\\temp')))
-      if t >= limit:
-        return False
-      if len(os.listdir(f'{DOWNLOAD_PATH}\\temp')):
-        flag = True
-        for fname in os.listdir(f'{DOWNLOAD_PATH}\\temp'):
-          if fname.endswith('.crdownload'):
-            flag = False
-        if flag:
-          self.move_file(filename)
-          return True
-      t += delay
-      time.sleep(delay)
+      print(f'매니저 전체 클릭 후 검색에서 에러\n{e}')  
       
-  def move_file(self, filename):
-    if len(os.listdir(f'{DOWNLOAD_PATH}\\temp')):
-      for d in os.listdir(f'{DOWNLOAD_PATH}\\temp'):
-        shutil.move(f'{DOWNLOAD_PATH}\\temp\\{d}', f'{DOWNLOAD_PATH}\\{filename}')
-
   def download_bib(self):
     try:
       bib_btns = self.driver.find_elements_by_class_name('bib_btn')
@@ -205,12 +174,12 @@ class GET_FILES(Browser, PyautoGUI):
       self.wait_image_visible(f'{CURRENT_PATH}\\images\\adminpage\\adminpage_pdf_down.PNG', 0.5, 10)
       self.driver.execute_script('window.print();')
       time.sleep(1)
-      self.press(['enter'])
+      self.press_key(['enter'])
       self.wait_image_visible(f'{CURRENT_PATH}\\images\\adminpage\\adminpage_save_start.PNG', 0.5, 10)
       self.pyper_copy(f'{DOWNLOAD_PATH}\\temp\\warrant.pdf')
-      self.hotkey('alt', 'n')
-      self.hotkey('ctrl', 'v')
-      self.press(['enter'])
+      self.hot_key('alt', 'n')
+      self.hot_key('ctrl', 'v')
+      self.press_key(['enter'])
       self.wait_download('warrant.pdf', 0.5, 15)
 
       if 'stamp.jpg' in os.listdir(DOWNLOAD_PATH):

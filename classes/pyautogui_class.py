@@ -6,7 +6,7 @@ class PyautoGUI:
   def __init__(self):
     pass
 
-  def wait_image_visible(self, png, delay, timeout):
+  def wait_image_visible(self, png, delay=0.5, timeout=10):
     """
     png: str 또는 list 형식
     png와 일치하는 요소가 보일 때 까지 기다린다.
@@ -29,7 +29,7 @@ class PyautoGUI:
       if t >= timeout:
         return False, None
 
-  def wait_image_invisible(self, png, delay, timeout):
+  def wait_image_invisible(self, png, delay=0.5, timeout=10):
     def exc():
       try:
         if str(type(png)) == "<class 'list'>":
@@ -88,14 +88,14 @@ class PyautoGUI:
       raise Exception(err_msg)
     return False
   
-  def hotkey(self, a, b):
+  def hot_key(self, a, b):
     """
     a: ctrl, alt, shift 등등
     b: 나머지 키
     """
     pyautogui.hotkey(a, b)
   
-  def press(self, l):
+  def press_key(self, l):
     """
     l: 동작리스트 입력
     """
@@ -109,3 +109,6 @@ class PyautoGUI:
 
   def click_position(self, x, y, interval, clicks):
     pyautogui.click(x, y, interval=interval, clicks=clicks)
+
+  def write_key(self, string):
+    pyautogui.write(string)

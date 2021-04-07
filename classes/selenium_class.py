@@ -2,7 +2,7 @@ import os
 import sys
 import time
 import json
-
+import shutil
 from selenium import webdriver
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.ui import WebDriverWait
@@ -86,17 +86,29 @@ class Browser:
 
   ### 로딩함수
   def wait_element_visible(self, by, selector, timeout=7):
-    WebDriverWait(self.driver, timeout).until(
-      EC.visibility_of_element_located((by, selector))
-    )
+    try:
+      WebDriverWait(self.driver, timeout).until(
+        EC.visibility_of_element_located((self.str_to_by(by), selector))
+      )
+      return True
+    except:
+      return False
   def wait_element_presence(self, by, selector, timeout=7):
-    WebDriverWait(self.driver, timeout).until(
-      EC.presence_of_element_located((by, selector))
-    )
+    try:
+      WebDriverWait(self.driver, timeout).until(
+        EC.presence_of_element_located((self.str_to_by(by), selector))
+      )
+      return True
+    except:
+      return False
   def wait_element_inivisible(self, by, selector, timeout=7):
-    WebDriverWait(self.driver, timeout).until(
-      EC.invisibility_of_element_located((by, selector))
-    )
+    try:
+      WebDriverWait(self.driver, timeout).until(
+        EC.invisibility_of_element_located((self.str_to_by(by), selector))
+      )
+      return True
+    except:
+      return False
   def wait_new_window(self, length, delay, timeout=7):
     t = 0
     while True:
@@ -107,9 +119,13 @@ class Browser:
       if t >= timeout:
         return False
   def wait_element_clickable(self, by, selector, timeout=7):
-    WebDriverWait(self.driver, timeout).until(
-      EC.element_to_be_clickable((by, selector))
-    )
+    try:
+      WebDriverWait(self.driver, timeout).until(
+        EC.element_to_be_clickable((self.str_to_by(by), selector))
+      )
+      return True
+    except:
+      return False
   
   ### 스위치 함수
   def switch_windows(self, n):
@@ -129,3 +145,33 @@ class Browser:
       return True
     except:
       return False
+  
+  def move_file(self, filename):
+    if len(os.listdir(f'{DOWNLOAD_PATH}\\temp')):
+      for d in os.listdir(f'{DOWNLOAD_PATH}\\temp'):
+        shutil.move(f'{DOWNLOAD_PATH}\\temp\\{d}', f'{DOWNLOAD_PATH}\\{filename}')
+  
+  def wait_download(self, filename, delay=1, limit=15):
+    """
+    filename이 다운로드 되기 까지 대기
+    """
+    file_list = os.listdir(f'{DOWNLOAD_PATH}\\temp')
+    if len(file_list) > 0:
+      for d in file_list:
+        os.remove(f'{DOWNLOAD_PATH}\\temp\\{d}')
+
+    t = 0
+    while True:
+      print(len(os.listdir(f'{DOWNLOAD_PATH}\\temp')))
+      if t >= limit:
+        return False
+      if len(os.listdir(f'{DOWNLOAD_PATH}\\temp')):
+        flag = True
+        for fname in os.listdir(f'{DOWNLOAD_PATH}\\temp'):
+          if fname.endswith('.crdownload'):
+            flag = False
+        if flag:
+          self.move_file(filename)
+          return True
+      t += delay
+      time.sleep(delay)

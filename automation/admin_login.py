@@ -1,11 +1,7 @@
 import os
 import sys
 import time
-import json
 import pickle
-import shutil
-import getpass
-from datetime import datetime, timedelta, date
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 
 from classes.pyautogui_class import PyautoGUI
