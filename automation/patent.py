@@ -103,8 +103,6 @@ class PATENT_PAGE(Browser, PyautoGUI):
 
   def page_search(self, accept_no, application_no, classify_no, markinfo_acc_no):
     try:
-
-    
       page, btn_cnt, cnt = 1, 1, 0
       total_page = int(self.driver.find_element_by_xpath('//*[@id="form"]/div[2]/p/span[1]/em').text) // 20 + 1
       flag = False
@@ -193,99 +191,3 @@ def main(driver):
   patent_page = PATENT_PAGE(driver)
   patent_page.login_patent()
   patent_page.visit_folder()
-
-# def script(today_dir, markinfo_acc_no):
-#   txt_file = open(f'{today_dir}\\numbers.txt')
-  
-#   complete_list = []
-#   while True:
-#     line = txt_file.readline()
-#     if not line: break
-#     complete_list.append(line.split('\n')[0])
-#   txt_file.close()
-  
-#   for complete in complete_list:
-#     accept_no, application_no, classify_no = complete.split(',')
-#     page_search(accept_no, application_no, classify_no, markinfo_acc_no)
-    
-
-# def page_search(accept_no, application_no, classify_no, markinfo_acc_no):
-#   page, btn_cnt, cnt = 1, 1, 0
-#   total_page = int(driver.find_element_by_xpath('//*[@id="form"]/div[2]/p/span[1]/em').text) // 20 + 1
-#   flag = False
-#   while True:
-
-#     tbody = driver.find_element_by_xpath('//*[@id="SearchSbmtHistoryList"]/tbody')
-#     number_tr = len(tbody.find_elements_by_tag_name('tr'))
-#     for i in range(1, number_tr + 1):
-#       print(f'{page}페이지 {i}번째 진행중, {cnt}, {total_page}')
-#       accept_text = driver.find_element_by_xpath(f'//*[@id="SearchSbmtHistoryList"]/tbody/tr[{i}]/td[2]').text
-#       print(accept_text)
-#       if accept_text == accept_no:
-#         # 접수번호와 일치하면 먼저 분류 비교 후 출원번호 비교 후 pdf 저장
-#         classify_td = driver.find_element_by_xpath(f'//*[@id="SearchSbmtHistoryList"]/tbody/tr[{i}]').text
-#         state_td = driver.find_element_by_xpath(f'//*[@id="SearchSbmtHistoryList"]/tbody/tr[{i}]/td[7]').text
-#         if classify_no not in classify_td:
-#           print('분류번호 일치하지 않음', classify_no, classify_td)
-#           return
-
-#         if state_td != '접수완료':
-#           print('접수완료 상태가 아님')
-#           return
-        
-#         if exist_element_by_xpath(driver, f'//*[@id="SearchSbmtHistoryList"]/tbody/tr[{i}]/td[5]/a[1]'):
-#           link = driver.find_element_by_xpath(f'//*[@id="SearchSbmtHistoryList"]/tbody/tr[{i}]/td[5]/a[1]').click()
-#           wait_new_window(driver, 4)
-#           driver.switch_to.window(driver.window_handles[3])
-#           wait_visible(driver, 'xpath', '//*[@id="noprint"]/h3')
-#           application_td = driver.find_element_by_xpath('/html/body/div/div/div[2]/table[2]/tbody/tr[3]/td[2]').text
-#           if application_no in application_td:
-#             # driver.execute_script('window.print();')
-#             self.hot_key('ctrl', 'p')
-#             time.sleep(1)
-#             self.press_key(['enter'])
-#             wait_element_visible(f'{CURRENT_PATH}\\search\\adminpage_save_start.PNG')
-#             self.pyper_copy(f'{DOWNLOAD_PATH}\\temp\\2-{classify_no}.pdf')
-#             self.hot_key('alt', 'n')
-#             self.hot_key('ctrl', 'v')
-#             self.press_key(['enter'])
-#             wait_download(f'{markinfo_acc_no}\\2-{classify_no}.pdf')
-#             driver.close()
-#             driver.switch_to.window(driver.window_handles[2])
-        
-#         success = exist_element_by_xpath(driver, '//*[@id="back-to-top"]')
-#         if success:
-#           driver.find_element_by_xpath('//*[@id="back-to-top"]').click()
-#           time.sleep(0.5)
-#         # print(len(driver.window_handles), '개수')
-#         # driver.refresh()
-#         # wait_visible(driver, 'xpath', '//*[@id="searchBtn_Bef"]/a[1]')
-#         driver.find_element_by_xpath('//*[@id="searchBtn_Bef"]/a[1]').click()
-
-#         # driver.find_element_by_xpath('//*[@id="form"]/div[2]/div/a').click()
-
-#         flag = True
-#         return
-
-#     if btn_cnt == 10:
-#       if total_page > 10:
-#         driver.find_element_by_xpath('//*[@id="form"]/div[4]/p/a[12]').click()
-#         # wait_invisible_by_xpath('//*[@id="nppfs-loading-modal"]')
-#         btn_cnt = 0
-#     else:
-#       if page < total_page:
-#         if exist_element_by_xpath(driver, '//*[@id="form"]/div[4]/p/a[12]'):
-#           driver.find_element_by_xpath(f'//*[@id="form"]/div[4]/p/a[{btn_cnt + 2}]').click()
-#         else:
-#           if exist_element_by_xpath(driver, f'//*[@id="form"]/div[4]/p/a[{btn_cnt}]'):
-#             driver.find_element_by_xpath(f'//*[@id="form"]/div[4]/p/a[{btn_cnt}]').click()
-#     # wait_invisible_by_xpath('//*[@id="nppfs-loading-modal"]')
-    
-#     cnt += 1
-#     if cnt >= total_page:
-#       break
-#     btn_cnt += 1
-#     page += 1
-#   if not flag:
-#     print('일치하는 접수번호가 없음')
-#     # slack

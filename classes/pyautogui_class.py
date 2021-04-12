@@ -112,3 +112,9 @@ class PyautoGUI:
 
   def write_key(self, string):
     pyautogui.write(string)
+
+  def drag_mouse_and_paste(self, x1, y1, x2, y2, t):
+    pyautogui.moveTo(x1, y1)
+    pyautogui.dragTo(x2, y2, t, button='left')
+    pyautogui.hotkey('ctrl', 'c')
+    return pyperclip.paste()

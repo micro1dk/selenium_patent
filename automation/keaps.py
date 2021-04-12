@@ -60,8 +60,16 @@ class Keaps(PyautoGUI):
 
     except Exception as e:
       print(f'서식작성기과정에서 에러\n{e}')
+
+  def extract_number(string):
+    ret = ''
+    for s in string:
+      if s.isnumeric():
+        ret += ''
+      elif s == '-':
+        ret += s
+    return ret
   
-          
   def start_one(self, folder_path, application_path, classify):
     print('===================')
     print(classify, ' and ' , folder_path)
@@ -148,85 +156,92 @@ class Keaps(PyautoGUI):
         f'{self.IMAGE_PATH}\\search_complete.PNG',
         'wait element visible 에러: search_complete.PNG와 일치하는 이미지가 없음 (핑크색 완료버튼)', 0.5, 3, True
       )
-
-      # 전자문서 제출 클릭 후 YES
-      self.click_image(
-        f'{self.IMAGE_PATH}\\document_submit.PNG',
-        'wait element visible 에러: document_submit.PNG와 일치하는 이미지가 없음 (전자문서제출 버튼)', 0.5, 2, True
-      )
-      self.click_image(
-        f'{self.IMAGE_PATH}\\document_create_yes.PNG',
-        'wait element visible 에러: document_create_yes.PNG와 일치하는 이미지가 없음 (위임장 정보 다이얼로그 > 예 버튼)', 0.5, 3, True
-      )
-
-      # # 온라인제출 마법사 에서 제출문서 생성 클릭 후 YES
-      self.click_image(
-        f'{self.IMAGE_PATH}\\document_create.PNG',
-        'wait element visible 에러: document_create.PNG와 일치하는 이미지가 없음 (온라인제출 마법사 창에서 제출문서 생성 버튼)', 0.5, 3, True
-      )
-      self.click_image(
-        f'{self.IMAGE_PATH}\\document_create_yes.PNG',
-        'wait element visible 에러: document_create_yes.PNG와 일치하는 이미지가 없음 (제출문서 다이얼로그 > 예 버튼)', 0.5, 3, True
-      )
-
-      # 통합뷰어에서 상표견본 클릭
-      # self.click_image(
-      #   f'{self.IMAGE_PATH}\\viewer_image_check.PNG',
-      #   'wait element visible 에러: document_create_yes.PNG와 일치하는 이미지가 없음 (제출문서 다이얼로그 > 예 버튼)', 0.5, 3, True
-      # )
-      # time.sleep(0.5)
-      # print('견본이미지와 일치?')
       
-      # # 견본이미지와 일치하는지?
-      # self.doubleClick(x=574, y=290)
-      # time.sleep(0.5)
-      # # mark_image = self.locateOnScreen(f'{self.IMAGE_PATH}\\ttt.jpg') # 테스트용 일치하지 않는 이미지
-      # mark_image = self.locateOnScreen(f'{folder_path}\\logo_{classify}.jpg')
-      # if not mark_image:
-      #   raise Exception('상표견본 이미지와 일치하지 않음')
-      # self.hotkey('alt', 'f4')
-      
-      # 일치하면 서지사항으로 간 뒤 인쇄창 띄우고 pdf 저장하기
-      self.click_image(
-        f'{self.IMAGE_PATH}\\viewer_this.PNG',
-        'wait element visible 에러: viewer_this.PNG와 일치하는 이미지가 없음 (서지사항)', 0.5, 3, True
-      )
-      self.hotkey('ctrl', 'p')
+      cnt = 0
+      while True:
+        # 전자문서 제출 클릭 후 YES
+        self.click_image(
+          f'{self.IMAGE_PATH}\\document_submit.PNG',
+          'wait element visible 에러: document_submit.PNG와 일치하는 이미지가 없음 (전자문서제출 버튼)', 0.5, 2, True
+        )
+        self.click_image(
+          f'{self.IMAGE_PATH}\\document_create_yes.PNG',
+          'wait element visible 에러: document_create_yes.PNG와 일치하는 이미지가 없음 (위임장 정보 다이얼로그 > 예 버튼)', 0.5, 3, True
+        )
 
-      # 프린터 선택하기
-      self.click_image(
-        f'{self.IMAGE_PATH}\\viewer_print_select.PNG',
-        'wait element visible 에러: viewer_print_select.PNG와 일치하는 이미지가 없음 (인쇄 창에서 셀렉트박스)', 0.5, 3, True
-      )
-      time.sleep(0.5)
-      self.click_image(
-        [f'{self.IMAGE_PATH}\\viewer_pdf_selected_1.PNG', f'{self.IMAGE_PATH}\\viewer_pdf_selected_2.PNG'],
-        'wait element visible 에러: viewer_pdf_selected.PNG와 일치하는 이미지가 없음 (마이크로소프트 pdf 가 없음)', 0.5, 3, True
-      )
-      
-      # 인쇄확인
-      self.click_image(
-        f'{self.IMAGE_PATH}\\viewer_print.PNG',
-        'wait element visible 에러: viewer_print.PNG와 일치하는 이미지가 없음 (인쇄 확인버튼)', 0.5, 3, True
-      )
+        # # 온라인제출 마법사 에서 제출문서 생성 클릭 후 YES
+        self.click_image(
+          f'{self.IMAGE_PATH}\\document_create.PNG',
+          'wait element visible 에러: document_create.PNG와 일치하는 이미지가 없음 (온라인제출 마법사 창에서 제출문서 생성 버튼)', 0.5, 3, True
+        )
+        self.click_image(
+          f'{self.IMAGE_PATH}\\document_create_yes.PNG',
+          'wait element visible 에러: document_create_yes.PNG와 일치하는 이미지가 없음 (제출문서 다이얼로그 > 예 버튼)', 0.5, 3, True
+        )
 
-      self.hotkey('alt', 'n') # 파일이름 선택
-      self.pyper_copy(f'{folder_path}\\1-{classify}.pdf')
-      self.hotkey('ctrl', 'v')
-      self.press(['enter'])
+        # 일치하면 서지사항으로 간 뒤 인쇄창 띄우고 pdf 저장하기
+        self.click_image(
+          f'{self.IMAGE_PATH}\\viewer_this.PNG',
+          'wait element visible 에러: viewer_this.PNG와 일치하는 이미지가 없음 (서지사항)', 0.5, 3, True
+        )
+        self.hotkey('ctrl', 'p')
 
-      # 통합뷰어 닫기
-      self.click_image(
-        f'{self.IMAGE_PATH}\\viewer_close_1.PNG',
-        'wait element visible 에러: viewer_close_1.PNG와 일치하는 이미지가 없음 (왼쪽 상단 버튼)', 0.5, 3, True
-      )
-      self.click_image(
-        f'{self.IMAGE_PATH}\\viewer_close_2.PNG',
-        'wait element visible 에러: viewer_close_2.PNG와 일치하는 이미지가 없음 (왼쪽 상단 버튼 누른 뒤 닫기버튼)', 0.5, 3, True
-      )
+        # 프린터 선택하기
+        self.click_image(
+          f'{self.IMAGE_PATH}\\viewer_print_select.PNG',
+          'wait element visible 에러: viewer_print_select.PNG와 일치하는 이미지가 없음 (인쇄 창에서 셀렉트박스)', 0.5, 3, True
+        )
+        time.sleep(0.5)
+        self.click_image(
+          [f'{self.IMAGE_PATH}\\viewer_pdf_selected_1.PNG', f'{self.IMAGE_PATH}\\viewer_pdf_selected_2.PNG'],
+          'wait element visible 에러: viewer_pdf_selected.PNG와 일치하는 이미지가 없음 (마이크로소프트 pdf 가 없음)', 0.5, 3, True
+        )
+        
+        # 인쇄확인
+        self.click_image(
+          f'{self.IMAGE_PATH}\\viewer_print.PNG',
+          'wait element visible 에러: viewer_print.PNG와 일치하는 이미지가 없음 (인쇄 확인버튼)', 0.5, 3, True
+        )
 
-      # self.kill_application()
-      # print('끝')
+        self.hotkey('alt', 'n') # 파일이름 선택
+        self.pyper_copy(f'{folder_path}\\1-{classify}.pdf')
+        self.hotkey('ctrl', 'v')
+        self.press(['enter'])
+
+        # 통합뷰어 닫기
+        self.click_image(
+          f'{self.IMAGE_PATH}\\viewer_close_1.PNG',
+          'wait element visible 에러: viewer_close_1.PNG와 일치하는 이미지가 없음 (왼쪽 상단 버튼)', 0.5, 3, True
+        )
+        self.click_image(
+          f'{self.IMAGE_PATH}\\viewer_close_2.PNG',
+          'wait element visible 에러: viewer_close_2.PNG와 일치하는 이미지가 없음 (왼쪽 상단 버튼 누른 뒤 닫기버튼)', 0.5, 3, True
+        )
+
+        # 공인인증서 로그인
+
+        # 제출결과대기 까지 대기
+
+        accept_no = self.extract_number(self.drag_mouse_and_paste(566, 755, 691, 755, 0.7))
+        application_no = self.extract_number(self.drag_mouse_and_paste(712, 737, 852, 760, 0.7))
+        success = self.drag_mouse_and_paste(1292, 755, 1350, 755, 0.7)
+        # 접수번호 끝이 XX이거나, 출원번호가 없는 경우 Err
+        # 있는경우면 출원번호 가공
+        if accept_no[-2:] != 'XX' and application_no != '' and success =='접수완료':
+          # 접수완료
+          f = open(f'{folder_path}\\_codes.txt', 'a', encoding='utf-8')
+          f.write(f'{accept_no},{application_no},{classify}\n')
+          f.close()
+          break
+        else:
+          # 실패 3번실패시 에러띄우고 다음 폴더로 넘어가기.
+          self.click_position(1381, 262, 1, 1)
+          cnt += 1
+      if cnt == 3:
+        raise Exception(f'3번 연속 실패')
+
+      self.kill_application()
+      print('끝')
     except Exception as e:
       # raise Exception(f'{classify}에서 에러\n{e}')
       print(f'{classify}에서 에러\n{e}')

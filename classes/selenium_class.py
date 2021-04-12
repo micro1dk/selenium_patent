@@ -81,6 +81,13 @@ class Browser:
     except Exception as e:
       return False, None
 
+  def check_attribute(self, by, selector, attribute):
+    try:
+      attr = self.driver.find_element(self.str_to_by(by), selector).get_attribute(attribute)
+      return True, attr
+    except:
+      return False, ''
+
   def accept_alert(self, alert):
     alert.accept()
 
@@ -175,3 +182,5 @@ class Browser:
           return True
       t += delay
       time.sleep(delay)
+
+  
