@@ -30,7 +30,7 @@ class Keaps(PyautoGUI):
     def kill_application(self):
         os.system('taskkill /IM nkeaps* /F /T')
     
-    def script_keaps(self):
+    def visit_folder(self):
         try:
             if not os.path.isdir(FOLDER_DIR):
                 raise Exception('오늘날짜의 폴더가 생성이 되지 않았음')
@@ -258,56 +258,67 @@ class Keaps(PyautoGUI):
                     f'{self.IMAGE_PATH}\\final_submit_login_btn.PNG',
                     'wait element visible 에러: final_submit_login_btn.PNG 확인버튼', 0.3, 2, True)
                 self.click_image(
-                    f'{self.IMAGE_PATH}\\final_submit_next_btn.PNG',
+                    f'{self.IMAGE_PATH}\\final_submit_next_btn.PNG', # 다음단계
                     'wait element visible 에러: final_submit_next_btn.PNG 에러', 0.5, 4, True)
                 self.click_image(
-                    f'{self.IMAGE_PATH}\\final_submit_next_btn.PNG',
+                    f'{self.IMAGE_PATH}\\final_submit_next_btn.PNG', # 다음단계
                     'wait element visible 에러: final_submit_next_btn.PNG 에러', 0.5, 4, True)
-                break
+                 self.click_image(
+                    f'{self.IMAGE_PATH}\\final_submit_final_btn.PNG', # 온라인제출
+                    'wait element visible 에러: final_submit_next_btn.PNG 에러', 0.5, 4, True)
+
+
+                # break # 테스트 종료시 삭제
                 
                 
 
-                # time.sleep(7)
+                time.sleep(5)
                 # 제출결과 안내 뜰 때까지 대기?
-                # accept_no = self.extract_number(
-                #     self.drag_mouse_and_paste(566, 755, 691, 755, 0.7))
-                # application_no = self.extract_number(
-                #     self.drag_mouse_and_paste(712, 737, 852, 760, 0.7))
-                # success = self.drag_mouse_and_paste(1292, 755, 1350, 755, 0.7)
-                # # 접수번호 끝이 XX이거나, 출원번호가 없는 경우 Err
-                # # 있는경우면 출원번호 가공
-                # if accept_no[-2:] != 'XX' and application_no != '' and success == '접수완료':
-                #     # 접수완료
-                #     f = open(f'{folder_path}\\_codes.txt',
-                #              'a', encoding='utf-8')
-                #     f.write(f'{accept_no},{application_no},{classify}\n')
-                #     f.close()
-                #     break
-                # else:
-                #     # 실패 3번실패시 에러띄우고 다음 폴더로 넘어가기.
-                #     self.click_position(1381, 262, 1, 1)
-                #     cnt += 1
+                success, elmt = self.wait_image_visible(
+                    f'{self.IMAGE_PATH}\\final_result_text.JPG',
+                    0.5, 5
+                )
+                print(success, '제출결과대기 성공')
+                accept_no = self.extract_number(
+                    self.drag_mouse_and_paste(566, 755, 691, 755, 0.7))
+                application_no = self.extract_number(
+                    self.drag_mouse_and_paste(712, 737, 852, 760, 0.7))
+                success = self.drag_mouse_and_paste(1292, 755, 1350, 755, 0.7)
+                # 접수번호 끝이 XX이거나, 출원번호가 없는 경우 Err
+                # 있는경우면 출원번호 가공
+                if accept_no[-2:] != 'XX' and application_no != '' and success == '접수완료':
+                    # 접수완료
+                    f = open(f'{folder_path}\\_codes.txt',
+                             'a', encoding='utf-8')
+                    f.write(f'{accept_no},{application_no},{classify}\n')
+                    f.close()
+                    break
+                else:
+                    # 실패 -> 닫기
+                    self.click_position(1381, 262, 1, 1)
+                    cnt += 1
+            # 실패 3번실패시 에러띄우고 다음 폴더로 넘어가기.
             if cnt == 3:
                 raise Exception(f'3번 연속 실패')
             self.success += 1
-            # self.kill_application()
-            print('끝')
+            self.kill_application()
         except Exception as e:
-            print(f'{classify}에서 에러\n{e}')
+            print(f'{application_path} {classify}류에서 에러\n{e}')
+            Slack.chat('서식상세', f'└        {classify}류에서 에러\n{e}')
             self.kill_application()
             self.fail += 1
-            raise Exception(f'{classify}에서 에러\n{e}')
+            raise Exception(f'{application_path} {classify}류에서 에러\n{e}')
 
 
 def main():
     try:
         Slack.chat('서식상세', '=====================< 서식작성기 시작 >=====================')
         keaps = Keaps()
-        keaps.script_keaps()
+        keaps.visit_folder()
         total = keaps.success + keaps.fail
         Slack.chat('서식', 
             f'''
-                서식작성기 완료, 합: {total}, 성공: {keaps.success}, 실패: {keaps.fail}
+                서식작성기 완료 , 합: {total} , 성공: {keaps.success} , 실패: {keaps.fail}
             '''
         )
     except Exception as e:

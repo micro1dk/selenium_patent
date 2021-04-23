@@ -50,7 +50,8 @@ class UploadFiles(Browser, PyautoGUI):
                 if f == 'temp':
                     continue
                 if len(os.listdir(f'{FOLDER_DIR}\\{f}')) == 0:
-                    print(f'{f}는 비었음')  # slack api
+                    Slack.chat('서식상세', f'└        {f}는 빈 폴더')
+                    # print(f'{f}는 비었음')  # slack api
                     continue
 
                 pdfs_1, pdfs_2 = 0, 0
@@ -61,7 +62,8 @@ class UploadFiles(Browser, PyautoGUI):
                         pdfs_2 += 1
 
                 if pdfs_1 != pdfs_2:
-                    print('1-.pdf, 2-.pdf 개수 매치가 안됨')
+                    Slack.chat('서식상세', f'└        1-.pdf, 2-.pdf 개수 매치가 안됨')
+                    # print('1-.pdf, 2-.pdf 개수 매치가 안됨')
                     continue
 
                 complete_list = self.open_codes(f)
@@ -69,9 +71,9 @@ class UploadFiles(Browser, PyautoGUI):
                     continue
 
                 for complete in complete_list:
-                    accept_no, application_no, classify_no = complete.split(
-                        ',')
-                    print('page_search _before')
+                    accept_no, application_no, classify_no = complete.split(',')
+                    # print('page_search _before')
+                    Slack.chat('서식상세', f'admin 페이지 {f} {classify_no}류 시작')
                     # 한줄마다 페이지 전체를 순회하여 검색
                     self.page_search(accept_no, application_no, classify_no, f)
                     print('complete!')
@@ -96,8 +98,7 @@ class UploadFiles(Browser, PyautoGUI):
                     f'//*[@id="form"]/div[4]/div/div/ul/li[{i}]/a').click()
 
             # 폴더 순회 -> number 검색 -> 관리자페이지 리스트 순회
-            tbody = self.driver.find_element_by_xpath(
-                '//*[@id="table-view"]/tbody')
+            tbody = self.driver.find_element_by_xpath('//*[@id="table-view"]/tbody')
             number_tr = len(tbody.find_elements_by_tag_name('tr'))
 
             for j in range(1, number_tr + 1):
@@ -110,16 +111,16 @@ class UploadFiles(Browser, PyautoGUI):
                 state_elem = self.driver.find_element_by_xpath(
                     f'//*[@id="table-view"]/tbody/tr[{j}]/td[7]')  # 회신사항
 
-                print(markinfo_acc_no, title_elem.text)
+                # print(markinfo_acc_no, title_elem.text)
                 if '최종제출동의' == reply_elem.text and '처리대기' in state_elem.text and markinfo_acc_no in title_elem.text and f'{classify_no}류' in title_elem.text:
-                    print('발견!!!=====================')
+                    # print('발견!!!=====================')
                     time.sleep(2)
                     self.driver.find_element_by_xpath(f'//*[@id="table-view"]/tbody/tr[{j}]/td[5]/div[3]/span/a').click()
                     self.driver.switch_to.window(self.driver.window_handles[1])
                     success = self.detail_page(accept_no, application_no, classify_no, markinfo_acc_no)
 
                     time.sleep(10)
-                    print('ok 상세페이지 업로드 성공?', success)
+                    # print('ok 상세페이지 업로드 성공?', success)
                     self.driver.close()
                     self.driver.switch_to.window(self.driver.window_handles[0])
 
@@ -128,6 +129,7 @@ class UploadFiles(Browser, PyautoGUI):
                     # self.click('xpath', f'//*[@id="table-view"]/tbody/tr[{j}]/td[7]/div/div/ul/li[4]/a') # 처리완료 클릭
 
                     # 처리대기 클릭
+                    Slack.chat('서식상세', f'└        상태값 처리완료로')
                     self.click(
                         'xpath', f'//*[@id="table-view"]/tbody/tr[{j}]/td[7]/div/div/a')
                     time.sleep(3)
@@ -171,12 +173,14 @@ class UploadFiles(Browser, PyautoGUI):
                 """
                 분류번호가 맞는 것
                 """
-                print(bib_classifies[i].text, classify_no, application_no)
+                # print(bib_classifies[i].text, classify_no, application_no)
                 if bib_classifies[i].get_attribute('value') == classify_no:
-                    print('okkkk')
+                    Slack.chat('서식상세', f'└        {classify_no}류에 출원번호는 {application_no}')
+                    # print('okkkk')
                     number_inputs[i].send_keys(application_no)
                     time.sleep(1)
                     self.write_key(application_no)
+                    Slack.chat('서식상세', f'└         1-{classify_no}.pdf, 2-{classify_no}.pdf 업로드')
                     # edit_btns[i].click()
                     # submit_btns[i].click()
                     # inputs[i].send_keys(

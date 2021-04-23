@@ -109,6 +109,7 @@ class GetFiles(Browser, PyautoGUI):
             if not success_download:
                 raise Exception('bib 다운로드 실패함')
         except Exception as e:
+            Slack.chat('서식상세', f'　└        bib 다운에러: {e}')
             raise Exception(f'bib 다운로드 과정에서 에러\n{e}')
     
     def download_image(self):

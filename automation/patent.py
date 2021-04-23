@@ -28,6 +28,7 @@ class Patent(Browser, PyautoGUI):
             # self.visit('www.naver.com')
             # self.driver.execute_script('window.open("about:blank", "_blank");')
             # self.switch_windows(2)
+            Slack.chat('서식', '특허로 로그인')
             self.visit('https://www.patent.go.kr/smart/LoginForm.do')
             # self.switch_windows(2)
 
@@ -36,7 +37,6 @@ class Patent(Browser, PyautoGUI):
             self.click('xpath', '//*[@id="container"]/div/div[3]/div[1]/a')
             browser_success, m = self.wait_image_visible(
                 f'{self.IMAGE_PATH}\\patent_browser.PNG', 0.3, 2.1)
-            print(browser_success, '??')
             if browser_success:
                 self.click_image(
                     [f'{self.IMAGE_PATH}\\patent_harddisk_1.PNG', f'{self.IMAGE_PATH}\\patent_harddisk_2.PNG',
@@ -76,10 +76,11 @@ class Patent(Browser, PyautoGUI):
                 raise Exception('오늘날짜의 폴더가 생성되어있지 않음')
 
             for f in os.listdir(FOLDER_DIR):
+                Slack.chat('서식상세', f'{FOLDER_DIR}\\{f} 폴더 진행')
                 if f == 'temp':
                     continue
                 if len(os.listdir(f'{FOLDER_DIR}\\{f}')) == 0:
-                    print(f'{f}는 빈 폴더')
+                    Slack.chat('서식상세', f'└        {f}는 빈 폴더')
                     continue
 
                 pdfs, bibs = 0, 0
@@ -90,9 +91,9 @@ class Patent(Browser, PyautoGUI):
                         bibs += 1
 
                 if pdfs != bibs:
-                    print('pdfs, bib 개수 매치 안됨')
+                    Slack.chat('서식상세', f'└        pdfs, bib 개수 매치가 안됨')
                     continue
-
+                
                 self.script_patent(f'{FOLDER_DIR}\\{f}', f)
                 print(f, '끝')
         except Exception as e:
@@ -139,11 +140,13 @@ class Patent(Browser, PyautoGUI):
                         state_td = self.driver.find_element_by_xpath(
                             f'//*[@id="SearchSbmtHistoryList"]/tbody/tr[{i}]/td[7]').text
                         if classify_no not in classify_td:
-                            print('분류번호 일치하지 않음', classify_no, classify_td)
+                            Slack.chat('서식상세', f'　└        분류번호 일치하지 않음 {classify_no} != {classify_td}')
+                            # print('분류번호 일치하지 않음', classify_no, classify_td)
                             return
 
                         if state_td != '접수완료':
-                            print('접수완료 상태가 아님')
+                            Slack.chat('서식상세', f'　└        접수완료 상태가 아님')
+                            # print('접수완료 상태가 아님')
                             return
                         if self.exist_element('xpath', f'//*[@id="SearchSbmtHistoryList"]/tbody/tr[{i}]/td[5]/a[1]'):
                             self.click(
@@ -155,6 +158,7 @@ class Patent(Browser, PyautoGUI):
                             application_td = self.driver.find_element_by_xpath(
                                 '/html/body/div/div/div[2]/table[2]/tbody/tr[3]/td[2]').text
                             if application_no in application_td:
+                                Slack.chat('서식상세', f'└        2-{classify_no}.pdf 저장')
                                 self.hot_key('ctrl', 'p')
                                 time.sleep(1.5)
                                 self.press_key(['enter'])
@@ -169,15 +173,15 @@ class Patent(Browser, PyautoGUI):
                                     f'{markinfo_acc_no}\\2-{classify_no}.pdf')
                                 self.driver.close()
                                 self.switch_windows(1)
+                                # raise Exception('테스트 에러')
 
-                            # success = self.exist_element('xpath', '//*[@id="back-to-top"]')
                             success = self.wait_element_presence(
                                 'xpath', '//*[@id="back-to-top"]', 0.5)
                             if success:
                                 self.click(
                                     'xpath', '//*[@id="back-to-top"]', 0.5)
                                 time.sleep(0.5)
-                            # print(len(self.driver.window_handles), '개수')
+ 
                             self.driver.refresh()
                             self.wait_element_visible(
                                 'xpath', '//*[@id="searchBtn_Bef"]/a[1]')
@@ -216,7 +220,13 @@ class Patent(Browser, PyautoGUI):
                 # slack
         except Exception as e:
             self.fail += 1
-            Slack.chat('서식상세', f'페이지하나 에러')
+            Slack.chat('서식상세', f'페이지하나 에러\n{e}')
+            self.switch_windows(1)
+            self.driver.refresh()
+            s = self.wait_element_visible('xpath', '//*[@id="searchBtn_Bef"]/a[1]')
+            print('s는', s)
+            if s:
+                self.click('xpath', '//*[@id="searchBtn_Bef"]/a[1]')
             print('페이지하나 에러: ', e)
 
 def main(driver):
