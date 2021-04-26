@@ -13,6 +13,7 @@ class UploadFiles(Browser, PyautoGUI):
         self.driver = driver
         self.success = 0
         self.fail = 0
+        self.complete_list = []
     
     def open_codes(self, f):
         try:
@@ -49,9 +50,10 @@ class UploadFiles(Browser, PyautoGUI):
             for f in os.listdir(FOLDER_DIR):
                 if f == 'temp':
                     continue
+                
+                Slack.chat('서식상세', f'4. {f} 폴더 진행 (관리자페이지 파일업로드)')
                 if len(os.listdir(f'{FOLDER_DIR}\\{f}')) == 0:
                     Slack.chat('서식상세', f'└        {f}는 빈 폴더')
-                    # print(f'{f}는 비었음')  # slack api
                     continue
 
                 pdfs_1, pdfs_2 = 0, 0
@@ -63,25 +65,30 @@ class UploadFiles(Browser, PyautoGUI):
 
                 if pdfs_1 != pdfs_2:
                     Slack.chat('서식상세', f'└        1-.pdf, 2-.pdf 개수 매치가 안됨')
-                    # print('1-.pdf, 2-.pdf 개수 매치가 안됨')
                     continue
 
                 complete_list = self.open_codes(f)
+                complete_length = len(complete_list)
                 if not complete_list:
                     continue
-
+                
+                complete_cnt = 0
                 for complete in complete_list:
                     accept_no, application_no, classify_no = complete.split(',')
                     # print('page_search _before')
                     Slack.chat('서식상세', f'admin 페이지 {f} {classify_no}류 시작')
                     # 한줄마다 페이지 전체를 순회하여 검색
-                    self.page_search(accept_no, application_no, classify_no, f)
+                    if complete_cnt == complete_length - 1:
+                        complete = True # 마지막 항목일 때 True
+                    self.page_search(accept_no, application_no, classify_no, f, complete)
+                    complete_cnt += 1
+
                     print('complete!')
         except Exception as e:
             print(f'visit_folder 에러{e}')
             pass
 
-    def page_search(self, accept_no, application_no, classify_no, markinfo_acc_no):
+    def page_search(self, accept_no, application_no, classify_no, markinfo_acc_no, complete):
         print(f'{accept_no}, {application_no}, {classify_no}, {markinfo_acc_no}를 탐색한다.')
         self.driver.find_element_by_xpath('//*[@id="search"]').click()
         time.sleep(3)
@@ -117,7 +124,7 @@ class UploadFiles(Browser, PyautoGUI):
                     time.sleep(2)
                     self.driver.find_element_by_xpath(f'//*[@id="table-view"]/tbody/tr[{j}]/td[5]/div[3]/span/a').click()
                     self.driver.switch_to.window(self.driver.window_handles[1])
-                    success = self.detail_page(accept_no, application_no, classify_no, markinfo_acc_no)
+                    success = self.detail_page(accept_no, application_no, classify_no, markinfo_acc_no, complete)
 
                     time.sleep(10)
                     # print('ok 상세페이지 업로드 성공?', success)
@@ -157,7 +164,7 @@ class UploadFiles(Browser, PyautoGUI):
             i += 1
         # self.driver.find_element_by_xpath('//*[@id="search"]').click()
     
-    def detail_page(self, accept_no, application_no, classify_no, markinfo_acc_no):
+    def detail_page(self, accept_no, application_no, classify_no, markinfo_acc_no, complete):
         try:
             bib_classifies = self.driver.find_elements_by_class_name(
                 'classify_bib')
@@ -176,52 +183,30 @@ class UploadFiles(Browser, PyautoGUI):
                 # print(bib_classifies[i].text, classify_no, application_no)
                 if bib_classifies[i].get_attribute('value') == classify_no:
                     Slack.chat('서식상세', f'└        {classify_no}류에 출원번호는 {application_no}')
-                    # print('okkkk')
                     number_inputs[i].send_keys(application_no)
                     time.sleep(1)
                     self.write_key(application_no)
                     Slack.chat('서식상세', f'└         1-{classify_no}.pdf, 2-{classify_no}.pdf 업로드')
-                    # edit_btns[i].click()
-                    # submit_btns[i].click()
+                    edit_btns[i].click()
+                    submit_btns[i].click()
                     # inputs[i].send_keys(
                     #     f'{FOLDER_DIR}\\{accept_no}\\1-{classify_no}.pdf\n{FOLDER_DIR}\\{accept_no}\\2-{classify_no}.pdf')
                     # 확인 필요
 
-            # time.sleep(10)
-            # if not success_download:
-                # raise Exception('bib 다운로드 실패함')
+                    # 메일 보내기: 마지막 항목인 경우 보냄
+                    if complete:
+                        self.click('xpath', '/html/body/div[2]/div/div[3]/div/div[2]/div[1]/table/tbody/tr[3]/td[2]/div[4]')
+                        self.wait_new_window(2, 0.5)
+                        self.switch_windows(2)
+                        Slack.chat('서식상세', f'└         메일 & 알림톡 전송 (끝)')
+                        self.click('xpath', '/html/body/div[1]/div[2]/div[1]/div/button[1]'); time.sleep(2)
+                        self.driver.close()
+                        self.switch_windows(1)
+
             return True
         except Exception as e:
             print(f'출원번호 입력 과정에서 에러\n{e}')
             return False
-
-    def script_adminpage_upload(self):
-        # 리스트와 파일을 순회하며 파일업로드
-
-        # 테스트
-        # user_login()
-        # 매니저 전체 선택
-        # self.driver.find_element_by_xpath('//*[@id="selected_manager_name"]').click()
-        # ul_select = self.driver.find_element_by_xpath('//*[@id="form"]/div[1]/div[1]/div/div[4]/div/ul')
-        # li_select = ul_select.find_elements_by_tag_name('li')
-        # li_select[len(li_select) - 1].click()
-        # self.driver.find_element_by_xpath('//*[@id="search"]').click()
-
-        try:
-            if not os.path.isdir(FOLDER_DIR):
-                raise Exception('오늘날짜의 폴더가 생성이 되지 않았음')
-
-            """
-      리스트를 순회하고, accept_no에 들어있으면 업무상태를 처리완료로 변경
-      (한번만)링크타고 들어가서 업로드하기
-      """
-            # searching(2)
-            visit_folder()
-            # print(accept_no_list, '마지막')
-
-        except Exception as e:
-            print(e)
-
 
 def main(driver):
     try:
@@ -235,7 +220,6 @@ def main(driver):
             '''
         )
         
-        # upload_files.script_adminpage_upload()
     except Exception as e:
         Slack.chat('서식', f'마크인포 관리자페이지 탐색중 에러')
         raise Exception(e)

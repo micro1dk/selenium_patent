@@ -76,9 +76,10 @@ class Patent(Browser, PyautoGUI):
                 raise Exception('오늘날짜의 폴더가 생성되어있지 않음')
 
             for f in os.listdir(FOLDER_DIR):
-                Slack.chat('서식상세', f'{FOLDER_DIR}\\{f} 폴더 진행')
                 if f == 'temp':
                     continue
+
+                Slack.chat('서식상세', f'3. {f} 폴더 진행 (특허로)')
                 if len(os.listdir(f'{FOLDER_DIR}\\{f}')) == 0:
                     Slack.chat('서식상세', f'└        {f}는 빈 폴더')
                     continue
@@ -95,9 +96,10 @@ class Patent(Browser, PyautoGUI):
                     continue
                 
                 self.script_patent(f'{FOLDER_DIR}\\{f}', f)
-                print(f, '끝')
         except Exception as e:
-            print('폴더 방문 중 에러발생', e)
+            Slack.chat('서식상세', '-------------------')
+            print(f'폴더 방문 중 에러발생\n{e}')
+            raise Exception(e)
 
     def script_patent(self, today_dir, markinfo_acc_no):
         txt_file = open(f'{today_dir}\\_codes.txt')

@@ -55,7 +55,7 @@ class GetFiles(Browser, PyautoGUI):
                     number = tr.find_element_by_xpath('td[5]/div[1]').text
                     link = tr.find_element_by_xpath('td[5]/div[3]/span/a')
                     if state_1 == '최종제출동의' and state_2 == '처리대기' and number not in stack:
-                        Slack.chat('서식상세', f'{number} {link.text} 진행중...')
+                        Slack.chat('서식상세', f'1. {number} {link.text} 진행중...')
                         link.click()
                         self.wait_new_window(2, 0.3, 2.1)
                         self.driver.switch_to.window(

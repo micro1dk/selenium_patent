@@ -75,6 +75,7 @@ class Login(Browser):
 
 def main(driver):
     try:
+        Slack.chat('서식상세', '=====================< 마크인포 관리자페이지 로그인 >=====================')
         Admin_login = Login(driver)
         Admin_login.user_login()
         Slack.chat('서식', '관리자페이지 로그인 완료')

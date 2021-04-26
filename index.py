@@ -7,9 +7,9 @@ from classes.slack import Slack
 def main():
     try:
         browser = Browser()
-        # admin_login.main(browser.driver) # 관리자 페이지 로그인
-        # admin_get_files.main(browser.driver) # 상세페이지에서 자료모으기 
-        keaps.main()
+        admin_login.main(browser.driver) # 관리자 페이지 로그인
+        admin_get_files.main(browser.driver) # 상세페이지에서 자료모으기 
+        # keaps.main()
         # patent.main(browser.driver)
         # admin_upload_files.main(browser.driver)
     except Exception as e:

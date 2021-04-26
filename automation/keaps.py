@@ -18,7 +18,6 @@ class Keaps(PyautoGUI):
         os.system('taskkill /IM nkeaps* /F /T')
         time.sleep(1)
         os.startfile(application_path)
-        Slack.chat('서식상세', f'{application_path} 실행')
 
         self.click_image([f'{self.IMAGE_PATH}\\start_01.PNG',
                          f'{self.IMAGE_PATH}\\start_02.PNG'], '없음', 0.5, 3, False)
@@ -36,10 +35,10 @@ class Keaps(PyautoGUI):
                 raise Exception('오늘날짜의 폴더가 생성이 되지 않았음')
 
             for f in os.listdir(FOLDER_DIR):
-                Slack.chat('서식상세', f'{FOLDER_DIR}\\{f} 폴더 진행')
-
                 if f == 'temp':
                     continue
+
+                Slack.chat('서식상세', f'2. {f} 폴더 진행 (서식작성기)')
                 if len(os.listdir(f'{FOLDER_DIR}\\{f}')) == 0:
                     Slack.chat('서식상세', f'└        {f}는 빈 폴더')
                     continue
@@ -72,6 +71,7 @@ class Keaps(PyautoGUI):
                         self.start_one(f'{FOLDER_DIR}\\{f}',
                                         f'{FOLDER_DIR}\\{f}\\{d}', classify)
         except Exception as e:
+            Slack.chat('서식상세', '-------------------')
             print(f'서식작성기과정에서 에러\n{e}')
             raise Exception(e)
 
@@ -90,6 +90,7 @@ class Keaps(PyautoGUI):
         # print('===================')
         try:
             # 파일 실행 - 폴더별 순회 bib실행, 현재는 bib 하나일때만
+            Slack.chat('서식상세', f'└        BIB_{classify}.BIB 실행')
             self.start_application(application_path)
 
             # 시작 대기
@@ -241,10 +242,6 @@ class Keaps(PyautoGUI):
                 )
 
                 # 공인인증서 로그인
-
-                # 제출결과대기 까지 대기
-                # break # 테스트 종료시 삭제
-                
                 # 실제 제출진행
                 self.click_image( # 서명클릭
                     f'{self.IMAGE_PATH}\\final_submit_1.png', 
@@ -263,22 +260,23 @@ class Keaps(PyautoGUI):
                 self.click_image(
                     f'{self.IMAGE_PATH}\\final_submit_next_btn.PNG', # 다음단계
                     'wait element visible 에러: final_submit_next_btn.PNG 에러', 0.5, 4, True)
-                 self.click_image(
+                self.click_image(
                     f'{self.IMAGE_PATH}\\final_submit_final_btn.PNG', # 온라인제출
                     'wait element visible 에러: final_submit_next_btn.PNG 에러', 0.5, 4, True)
 
-
-                # break # 테스트 종료시 삭제
+                # 예 버튼 최종제출
+                self.click_image(
+                    f'{self.IMAGE_PATH}\\document_create_yes.PNG',
+                    'wait element visible 에러: document_create_yes.PNG와 일치하는 이미지가 없음 (최종제출 > 예)', 0.5, 4, True
+                )
                 
-                
-
                 time.sleep(5)
                 # 제출결과 안내 뜰 때까지 대기?
                 success, elmt = self.wait_image_visible(
                     f'{self.IMAGE_PATH}\\final_result_text.JPG',
                     0.5, 5
                 )
-                print(success, '제출결과대기 성공')
+
                 accept_no = self.extract_number(
                     self.drag_mouse_and_paste(566, 755, 691, 755, 0.7))
                 application_no = self.extract_number(
@@ -287,6 +285,8 @@ class Keaps(PyautoGUI):
                 # 접수번호 끝이 XX이거나, 출원번호가 없는 경우 Err
                 # 있는경우면 출원번호 가공
                 if accept_no[-2:] != 'XX' and application_no != '' and success == '접수완료':
+                    Slack.chat('서식상세', f'└        _codes.txt 생성 {accept_no}, {application_no}, {classify}')
+
                     # 접수완료
                     f = open(f'{folder_path}\\_codes.txt',
                              'a', encoding='utf-8')
@@ -297,13 +297,13 @@ class Keaps(PyautoGUI):
                     # 실패 -> 닫기
                     self.click_position(1381, 262, 1, 1)
                     cnt += 1
-            # 실패 3번실패시 에러띄우고 다음 폴더로 넘어가기.
-            if cnt == 3:
-                raise Exception(f'3번 연속 실패')
+
+                # 실패 3번실패시 에러띄우고 다음 폴더로 넘어가기.
+                if cnt == 3:
+                    raise Exception(f'3번 연속 실패')
             self.success += 1
             self.kill_application()
         except Exception as e:
-            print(f'{application_path} {classify}류에서 에러\n{e}')
             Slack.chat('서식상세', f'└        {classify}류에서 에러\n{e}')
             self.kill_application()
             self.fail += 1
