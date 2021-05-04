@@ -108,14 +108,20 @@ class PyautoGUI:
     def pyper_paste(self):
         return pyperclip.paste()
 
-    def click_position(self, x, y, interval, clicks):
+    def click_position(self, x, y, interval=1, clicks=1):
         pyautogui.click(x, y, interval=interval, clicks=clicks)
 
     def write_key(self, string):
         pyautogui.write(string)
 
     def drag_mouse_and_paste(self, x1, y1, x2, y2, t):
+        pyautogui.hotkey('ctrl', 'c')
         pyautogui.moveTo(x1, y1)
         pyautogui.dragTo(x2, y2, t, button='left')
+        time.sleep(0.3)
         pyautogui.hotkey('ctrl', 'c')
+        time.sleep(0.3)
         return pyperclip.paste()
+    
+    def move_mouse_pos(self, x, y):
+        pyautogui.moveTo(x, y)

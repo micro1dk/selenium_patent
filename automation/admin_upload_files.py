@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import shutil
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 
 from paths import *
@@ -14,6 +15,7 @@ class UploadFiles(Browser, PyautoGUI):
         self.success = 0
         self.fail = 0
         self.complete_list = []
+        self.folder_fail = 0
     
     def open_codes(self, f):
         try:
@@ -35,6 +37,7 @@ class UploadFiles(Browser, PyautoGUI):
         폴더하나하나 순회
         """
         try:
+            self.visit('https://markinfo.co.kr/front/nanmin/phtml/list.php?code=doc&link_page=reply')
             # 매니저 전체 선택
             self.driver.find_element_by_xpath(
                 '//*[@id="selected_manager_name"]').click()
@@ -54,6 +57,7 @@ class UploadFiles(Browser, PyautoGUI):
                 Slack.chat('서식상세', f'4. {f} 폴더 진행 (관리자페이지 파일업로드)')
                 if len(os.listdir(f'{FOLDER_DIR}\\{f}')) == 0:
                     Slack.chat('서식상세', f'└        {f}는 빈 폴더')
+                    self.folder_fail += 1
                     continue
 
                 pdfs_1, pdfs_2 = 0, 0
@@ -65,11 +69,14 @@ class UploadFiles(Browser, PyautoGUI):
 
                 if pdfs_1 != pdfs_2:
                     Slack.chat('서식상세', f'└        1-.pdf, 2-.pdf 개수 매치가 안됨')
+                    self.folder_fail += 1
                     continue
 
                 complete_list = self.open_codes(f)
                 complete_length = len(complete_list)
                 if not complete_list:
+                    Slack.chat('서식상세', f'└        _codes.txt가 없거나 빈 파일')
+                    self.folder_fail += 1
                     continue
                 
                 complete_cnt = 0
@@ -86,7 +93,7 @@ class UploadFiles(Browser, PyautoGUI):
                     print('complete!')
         except Exception as e:
             print(f'visit_folder 에러{e}')
-            pass
+            raise Exception(e)
 
     def page_search(self, accept_no, application_no, classify_no, markinfo_acc_no, complete):
         print(f'{accept_no}, {application_no}, {classify_no}, {markinfo_acc_no}를 탐색한다.')
@@ -126,14 +133,14 @@ class UploadFiles(Browser, PyautoGUI):
                     self.driver.switch_to.window(self.driver.window_handles[1])
                     success = self.detail_page(accept_no, application_no, classify_no, markinfo_acc_no, complete)
 
-                    time.sleep(10)
+                    time.sleep(1)
                     # print('ok 상세페이지 업로드 성공?', success)
                     self.driver.close()
                     self.driver.switch_to.window(self.driver.window_handles[0])
 
-                    # if success:
-                    #   self.click('xpath', f'//*[@id="table-view"]/tbody/tr[{j}]/td[7]/div/div/a') # 처리대기 클릭
-                    # self.click('xpath', f'//*[@id="table-view"]/tbody/tr[{j}]/td[7]/div/div/ul/li[4]/a') # 처리완료 클릭
+                    if success:
+                        self.click('xpath', f'//*[@id="table-view"]/tbody/tr[{j}]/td[7]/div/div/a') # 처리대기 클릭
+                        self.click('xpath', f'//*[@id="table-view"]/tbody/tr[{j}]/td[7]/div/div/ul/li[4]/a') # 처리완료 클릭
 
                     # 처리대기 클릭
                     Slack.chat('서식상세', f'└        상태값 처리완료로')
@@ -172,10 +179,7 @@ class UploadFiles(Browser, PyautoGUI):
                 'application_number')
             edit_btns = self.driver.find_elements_by_class_name(
                 'application_edit')
-            submit_btns = self.driver.find_elements_by_class_name(
-                'btn_add_file')
-            inputs = self.driver.find_elements_by_class_name('input_imgs')
-
+            
             for i in range(len(bib_classifies)):
                 """
                 분류번호가 맞는 것
@@ -188,20 +192,62 @@ class UploadFiles(Browser, PyautoGUI):
                     self.write_key(application_no)
                     Slack.chat('서식상세', f'└         1-{classify_no}.pdf, 2-{classify_no}.pdf 업로드')
                     edit_btns[i].click()
+                    alert = self.wait_alert()
+                    self.accept_alert(alert)
+                    alert = self.wait_alert()
+                    self.accept_alert(alert)
+
+                    time.sleep(1)
+                    self.driver.refresh()
+                    submit_btns = self.driver.find_elements_by_class_name(
+                        'btn_add_file')
+                    upload_btns = self.driver.find_elements_by_class_name(
+                        'pdf_upload_btn'
+                    )
+
+                    inputs = self.driver.find_elements_by_class_name('input_imgs')             
                     submit_btns[i].click()
-                    # inputs[i].send_keys(
-                    #     f'{FOLDER_DIR}\\{accept_no}\\1-{classify_no}.pdf\n{FOLDER_DIR}\\{accept_no}\\2-{classify_no}.pdf')
+                    inputs[i].send_keys(
+                        f'{FOLDER_DIR}\\{markinfo_acc_no}\\1-{classify_no}.pdf')
+                    inputs[i].send_keys(
+                        f'{FOLDER_DIR}\\{markinfo_acc_no}\\2-{classify_no}.pdf')
                     # 확인 필요
+                    upload_btns[i].click()
+                    alert = self.wait_alert()
+                    self.accept_alert(alert)
 
                     # 메일 보내기: 마지막 항목인 경우 보냄
                     if complete:
-                        self.click('xpath', '/html/body/div[2]/div/div[3]/div/div[2]/div[1]/table/tbody/tr[3]/td[2]/div[4]')
-                        self.wait_new_window(2, 0.5)
-                        self.switch_windows(2)
-                        Slack.chat('서식상세', f'└         메일 & 알림톡 전송 (끝)')
-                        self.click('xpath', '/html/body/div[1]/div[2]/div[1]/div/button[1]'); time.sleep(2)
-                        self.driver.close()
-                        self.switch_windows(1)
+                        print('현재가 마지막 파일..')
+                        # 폴더 복사
+                        if not os.path.isdir(TARGET_MONTH):
+                            os.mkdir(TARGET_MONTH)
+
+                        if not os.path.isdir(TARGET_DAY):
+                            os.mkdir(TARGET_DAY)
+
+                        shutil.copytree(f'{FOLDER_DIR}\\{markinfo_acc_no}', f'{TARGET_DAY}\\{markinfo_acc_no}')
+
+                        elnt = self.driver.find_element_by_xpath('/html/body/div[2]/div/div[3]/div/div[2]/div[1]/table/tbody/tr[3]/td[2]/div[4]')
+                        print(elnt.text)
+        
+                        # if '출원컨펌요청' in elnt.text:
+                        #     raise Exception('출원컨펌요청이네요')
+                        # elnt.click()
+                        
+                        # self.wait_new_window(2, 0.5)
+                        # self.switch_windows(2)
+                        # Slack.chat('서식상세', f'└         메일 & 알림톡 전송 (끝)')
+                        # self.click('xpath', '/html/body/div[1]/div[2]/div[1]/div/button[1]'); time.sleep(2)
+                        # self.driver.close()
+                        # self.switch_windows(1)
+
+                        # 만약 폴더명을 이름으로 지정한다면
+                        # self.click('xpath', '/html/body/div[2]/div/div[3]/div/div[2]/div[2]/ul[1]/li[2]/a')
+                        # name = self.find_element_by_xpath('//*[@id="tab-2"]/div/table[1]/tbody/tr[2]/td[1]').text
+
+                        
+                        
 
             return True
         except Exception as e:
@@ -211,15 +257,17 @@ class UploadFiles(Browser, PyautoGUI):
 def main(driver):
     try:
         Slack.chat('서식상세', '=====================< 파일 업로드 시작 >=====================')
+        Slack.chat('서식', 'pdf 업로드 / 출원번호 저장 / 출원완료메일 작업 시작')
         upload_files = UploadFiles(driver)
         upload_files.visit_folder()
         total = upload_files.success + upload_files.fail
         Slack.chat('서식', 
             f'''
-                업로드 완료, 합: {total}, 성공: {upload_files.success}, 실패: {upload_files.fail}
+                업로드 완료, 합: {total}, 성공: {upload_files.success}, 실패: {upload_files.fail}, 폴더방문실패: {upload_files.folder_fail}
             '''
         )
         
     except Exception as e:
+        print('업로드 본체에러', e)
         Slack.chat('서식', f'마크인포 관리자페이지 탐색중 에러')
         raise Exception(e)

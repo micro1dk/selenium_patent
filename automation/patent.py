@@ -16,6 +16,7 @@ class Patent(Browser, PyautoGUI):
         self.spage = 1
         self.success = 0
         self.fail = 0
+        self.folder_fail = 0
 
     def movement(self, filename):
         for d in os.listdir(f'{DOWNLOAD_PATH}'):
@@ -82,6 +83,7 @@ class Patent(Browser, PyautoGUI):
                 Slack.chat('서식상세', f'3. {f} 폴더 진행 (특허로)')
                 if len(os.listdir(f'{FOLDER_DIR}\\{f}')) == 0:
                     Slack.chat('서식상세', f'└        {f}는 빈 폴더')
+                    self.folder_fail += 1
                     continue
 
                 pdfs, bibs = 0, 0
@@ -93,6 +95,7 @@ class Patent(Browser, PyautoGUI):
 
                 if pdfs != bibs:
                     Slack.chat('서식상세', f'└        pdfs, bib 개수 매치가 안됨')
+                    self.folder_fail += 1
                     continue
                 
                 self.script_patent(f'{FOLDER_DIR}\\{f}', f)
@@ -234,13 +237,14 @@ class Patent(Browser, PyautoGUI):
 def main(driver):
     try:
         Slack.chat('서식상세', '=====================< 특허로 시작 >=====================')
+        Slack.chat('서식', '특허로 작업 시작 (2-분류번호.pdf 저장)')
         patent_page = Patent(driver)
         patent_page.login_patent()
         patent_page.visit_folder()
         total = patent_page.success + patent_page.fail
         Slack.chat('서식', 
             f'''
-                특허로 완료, 합: {total} , 성공: {patent_page.success} , 실패: {patent_page.fail}
+                특허로 완료, 합: {total} , 성공: {patent_page.success} , 실패: {patent_page.fail} , 폴더방문실패: {patent_page.folder_fail}
             '''
         )
     except Exception as e:

@@ -1,9 +1,12 @@
-from slacker import Slacker
+import requests
 
-TOKEN = "xoxb-1810135889392-1792675447012-gBk2MXydPcyU04rxKRRPZnY5"
-SLACK = Slacker(TOKEN)
+TOKEN = "xoxb-2001561769222-2014505104628-YwFCbhsysY94LhZJhCgSDIEV"
 
 class Slack:
     @staticmethod
     def chat(channel, message):
-        SLACK.chat.post_message(f'#{channel}', message)
+        response = requests.post("https://slack.com/api/chat.postMessage",
+            headers={"Authorization": "Bearer "+ TOKEN},
+            data={"channel": channel,"text": message}
+        )
+ 

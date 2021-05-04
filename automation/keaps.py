@@ -13,14 +13,17 @@ class Keaps(PyautoGUI):
         self.IMAGE_PATH = f'{CURRENT_PATH}\\images\\keaps'
         self.success = 0
         self.fail = 0
+        self.folder_fail = 0
 
     def start_application(self, application_path):
         os.system('taskkill /IM nkeaps* /F /T')
         time.sleep(1)
         os.startfile(application_path)
-
+        print('start application')
         self.click_image([f'{self.IMAGE_PATH}\\start_01.PNG',
                          f'{self.IMAGE_PATH}\\start_02.PNG'], '없음', 0.5, 3, False)
+        print('pass')
+        
         time.sleep(1)
         self.click_image([f'{self.IMAGE_PATH}\\start_01.PNG',
                          f'{self.IMAGE_PATH}\\start_02.PNG'], '없음', 0.5, 1, False)
@@ -41,6 +44,7 @@ class Keaps(PyautoGUI):
                 Slack.chat('서식상세', f'2. {f} 폴더 진행 (서식작성기)')
                 if len(os.listdir(f'{FOLDER_DIR}\\{f}')) == 0:
                     Slack.chat('서식상세', f'└        {f}는 빈 폴더')
+                    self.folder_fail += 1
                     continue
                 
                 # 파일검사: bib파일, jpg 파일 분류가 매치되어야함, warrant.pdf파일이 있어야함
@@ -54,9 +58,11 @@ class Keaps(PyautoGUI):
                         pdf += 1
                 if jpgs != bibs:
                     Slack.chat('서식상세', f'└        jpg, bib 개수 매치가 안됨')
+                    self.folder_fail += 1
                     continue
                 if pdf != 1:
                     Slack.chat('서식상세', f'└        위임장pdf가 없음')
+                    self.folder_fail += 1
                     continue
                 print('성공')
 
@@ -75,13 +81,15 @@ class Keaps(PyautoGUI):
             print(f'서식작성기과정에서 에러\n{e}')
             raise Exception(e)
 
-    def extract_number(string):
+    def extract_number(self, string):
+        print('extract_number: ', string)
         ret = ''
         for s in string:
             if s.isnumeric():
-                ret += ''
+                ret += s
             elif s == '-':
                 ret += s
+        print('extract 결과: ', ret)
         return ret
 
     def start_one(self, folder_path, application_path, classify):
@@ -97,18 +105,26 @@ class Keaps(PyautoGUI):
             self.wait_image_visible(f'{self.IMAGE_PATH}\\start_1.PNG', 1.5, 20)
             time.sleep(1)
 
-            # # 아래로 버튼
+            # 아래로 버튼
+            e_cnt = 0
             while True:
-                self.click_position(x=1897, y=986, interval=0.5, clicks=3)
-                # 첨부서류 입력 누르기 -> 첨부서류 정보 창 open
-                elem = self.click_image(
-                    [f'{self.IMAGE_PATH}\\document_1.PNG',
-                        f'{self.IMAGE_PATH}\\document_2.PNG'],
-                    'wait element visible 에러: document_1, document_2.PNG와 일치하는 이미지가 없음 (첨부서류 입력 버튼)', 1, 15, True
-                )
-                if elem:
-                    break
+                # self.click_position(x=1897, y=986, interval=0.7, clicks=4)
+                self.click_position(x=1897, y=986)
 
+                s, e = self.wait_image_visible(f'{self.IMAGE_PATH}\\search_jpg.PNG', 0.2, 0.4)
+                if s:
+                    break
+                e_cnt += 1
+                if e_cnt >= 25:
+                    raise Exception('bib 에러')
+
+            # 첨부서류 입력 누르기 -> 첨부서류 정보 창 open
+            self.click_image(
+                [f'{self.IMAGE_PATH}\\document_1.PNG',
+                    f'{self.IMAGE_PATH}\\document_2.PNG'],
+                'wait element visible 에러: document_1, document_2.PNG와 일치하는 이미지가 없음 (첨부서류 입력 버튼)', 1, 15, True
+            )
+            
             # 첨부서류 정보 창에서 기타첨부서류로 이동
             time.sleep(1)
             self.press_key(['down'] * 18)
@@ -191,7 +207,7 @@ class Keaps(PyautoGUI):
                     'wait element visible 에러: document_create_yes.PNG와 일치하는 이미지가 없음 (위임장 정보 다이얼로그 > 예 버튼)', 0.5, 3, True
                 )
 
-                # # 온라인제출 마법사 에서 제출문서 생성 클릭 후 YES
+                # 온라인제출 마법사 에서 제출문서 생성 클릭 후 YES
                 self.click_image(
                     f'{self.IMAGE_PATH}\\document_create.PNG',
                     'wait element visible 에러: document_create.PNG와 일치하는 이미지가 없음 (온라인제출 마법사 창에서 제출문서 생성 버튼)', 0.5, 3, True
@@ -207,29 +223,29 @@ class Keaps(PyautoGUI):
                     'wait element visible 에러: viewer_this.PNG와 일치하는 이미지가 없음 (서지사항)', 0.5, 3, True
                 )
                 self.hot_key('ctrl', 'p')
+                if cnt == 0: # 첫 실패 후 두 번째부터는 저장할 필요가 없음
+                    # 프린터 선택하기
+                    self.click_image(
+                        f'{self.IMAGE_PATH}\\viewer_print_select.PNG',
+                        'wait element visible 에러: viewer_print_select.PNG와 일치하는 이미지가 없음 (인쇄 창에서 셀렉트박스)', 0.5, 3, True
+                    )
+                    time.sleep(0.5)
+                    self.click_image(
+                        [f'{self.IMAGE_PATH}\\viewer_pdf_selected_1.PNG',
+                            f'{self.IMAGE_PATH}\\viewer_pdf_selected_2.PNG'],
+                        'wait element visible 에러: viewer_pdf_selected.PNG와 일치하는 이미지가 없음 (마이크로소프트 pdf 가 없음)', 0.5, 3, True
+                    )
 
-                # 프린터 선택하기
-                self.click_image(
-                    f'{self.IMAGE_PATH}\\viewer_print_select.PNG',
-                    'wait element visible 에러: viewer_print_select.PNG와 일치하는 이미지가 없음 (인쇄 창에서 셀렉트박스)', 0.5, 3, True
-                )
-                time.sleep(0.5)
-                self.click_image(
-                    [f'{self.IMAGE_PATH}\\viewer_pdf_selected_1.PNG',
-                        f'{self.IMAGE_PATH}\\viewer_pdf_selected_2.PNG'],
-                    'wait element visible 에러: viewer_pdf_selected.PNG와 일치하는 이미지가 없음 (마이크로소프트 pdf 가 없음)', 0.5, 3, True
-                )
-
-                # 인쇄확인
-                self.click_image(
-                    f'{self.IMAGE_PATH}\\viewer_print.PNG',
-                    'wait element visible 에러: viewer_print.PNG와 일치하는 이미지가 없음 (인쇄 확인버튼)', 0.5, 3, True
-                )
-                Slack.chat('서식상세', f'└        1-{classify}.pdf 저장')
-                self.hot_key('alt', 'n')  # 파일이름 선택
-                self.pyper_copy(f'{folder_path}\\1-{classify}.pdf')
-                self.hot_key('ctrl', 'v')
-                self.press_key(['enter'])
+                    # 인쇄확인
+                    self.click_image(
+                        f'{self.IMAGE_PATH}\\viewer_print.PNG',
+                        'wait element visible 에러: viewer_print.PNG와 일치하는 이미지가 없음 (인쇄 확인버튼)', 0.5, 3, True
+                    )
+                    Slack.chat('서식상세', f'└        1-{classify}.pdf 저장')
+                    self.hot_key('alt', 'n')  # 파일이름 선택
+                    self.pyper_copy(f'{folder_path}\\1-{classify}.pdf')
+                    self.hot_key('ctrl', 'v')
+                    self.press_key(['enter'])
 
                 # 통합뷰어 닫기
                 self.click_image(
@@ -237,7 +253,7 @@ class Keaps(PyautoGUI):
                     'wait element visible 에러: viewer_close_1.PNG와 일치하는 이미지가 없음 (왼쪽 상단 버튼)', 0.5, 3, True
                 )
                 self.click_image(
-                    f'{self.IMAGE_PATH}\\viewer_close_2.PNG',
+                    [f'{self.IMAGE_PATH}\\viewer_close_2.PNG', f'{self.IMAGE_PATH}\\viewer_close_2_1.PNG',],
                     'wait element visible 에러: viewer_close_2.PNG와 일치하는 이미지가 없음 (왼쪽 상단 버튼 누른 뒤 닫기버튼)', 0.5, 3, True
                 )
 
@@ -254,12 +270,20 @@ class Keaps(PyautoGUI):
                 self.click_image(
                     f'{self.IMAGE_PATH}\\final_submit_login_btn.PNG',
                     'wait element visible 에러: final_submit_login_btn.PNG 확인버튼', 0.3, 2, True)
+                time.sleep(0.7)
+                self.click_image(
+                    f'{self.IMAGE_PATH}\\final_submit_name_3.PNG',
+                    'wait element visible 에러: final_submit_name_3.PNG 구공호버튼', 0.3, 2, True)
                 self.click_image(
                     f'{self.IMAGE_PATH}\\final_submit_next_btn.PNG', # 다음단계
-                    'wait element visible 에러: final_submit_next_btn.PNG 에러', 0.5, 4, True)
+                    'wait element visible 에러: final_submit_next_btn.PNG 에러 다음단계 버튼', 0.5, 4, True)
+                time.sleep(0.7)
+                self.move_mouse_pos(1987, 986)
                 self.click_image(
-                    f'{self.IMAGE_PATH}\\final_submit_next_btn.PNG', # 다음단계
-                    'wait element visible 에러: final_submit_next_btn.PNG 에러', 0.5, 4, True)
+                    f'{self.IMAGE_PATH}\\final_submit_next_btn_2.PNG', # 다음단계
+                    'wait element visible 에러: final_submit_next_btn_2.PNG 에러 다음단계 버튼', 0.5, 4, True)
+                time.sleep(0.5)
+
                 self.click_image(
                     f'{self.IMAGE_PATH}\\final_submit_final_btn.PNG', # 온라인제출
                     'wait element visible 에러: final_submit_next_btn.PNG 에러', 0.5, 4, True)
@@ -270,11 +294,11 @@ class Keaps(PyautoGUI):
                     'wait element visible 에러: document_create_yes.PNG와 일치하는 이미지가 없음 (최종제출 > 예)', 0.5, 4, True
                 )
                 
-                time.sleep(5)
+                time.sleep(7)
                 # 제출결과 안내 뜰 때까지 대기?
                 success, elmt = self.wait_image_visible(
-                    f'{self.IMAGE_PATH}\\final_result_text.JPG',
-                    0.5, 5
+                    f'{self.IMAGE_PATH}\\final_result_text.PNG',
+                    0.5, 25
                 )
 
                 accept_no = self.extract_number(
@@ -284,7 +308,10 @@ class Keaps(PyautoGUI):
                 success = self.drag_mouse_and_paste(1292, 755, 1350, 755, 0.7)
                 # 접수번호 끝이 XX이거나, 출원번호가 없는 경우 Err
                 # 있는경우면 출원번호 가공
-                if accept_no[-2:] != 'XX' and application_no != '' and success == '접수완료':
+                print(accept_no, '접수번호')
+                print(application_no, '출원번호')
+                print(success, '성공여부')
+                if accept_no[-2:] != 'XX' and application_no != '' and '접수완료' in success:
                     Slack.chat('서식상세', f'└        _codes.txt 생성 {accept_no}, {application_no}, {classify}')
 
                     # 접수완료
@@ -295,6 +322,7 @@ class Keaps(PyautoGUI):
                     break
                 else:
                     # 실패 -> 닫기
+                    Slack.chat('서식상세', f'└        출원실패! 다시')
                     self.click_position(1381, 262, 1, 1)
                     cnt += 1
 
@@ -313,12 +341,13 @@ class Keaps(PyautoGUI):
 def main():
     try:
         Slack.chat('서식상세', '=====================< 서식작성기 시작 >=====================')
+        Slack.chat('서식', '서식작성기 작업 시작')
         keaps = Keaps()
         keaps.visit_folder()
         total = keaps.success + keaps.fail
         Slack.chat('서식', 
             f'''
-                서식작성기 완료 , 합: {total} , 성공: {keaps.success} , 실패: {keaps.fail}
+                서식작성기 완료 , 합: {total} , 성공: {keaps.success} , 실패: {keaps.fail} , 폴더방문실패: {keaps.folder_fail}
             '''
         )
     except Exception as e:

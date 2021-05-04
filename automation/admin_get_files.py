@@ -27,7 +27,7 @@ class GetFiles(Browser, PyautoGUI):
             ul_select = self.driver.find_element_by_xpath(
                 '//*[@id="form"]/div[1]/div[1]/div/div[4]/div/ul')
             li_select = ul_select.find_elements_by_tag_name('li')
-            li_select[len(li_select) - 1].click()
+            li_select[len(li_select) - 1].click() # 전체는 -1
             self.driver.find_element_by_xpath('//*[@id="search"]').click()
 
             # paginate
@@ -320,6 +320,7 @@ class GetFiles(Browser, PyautoGUI):
 
 def main(driver):
     try:
+        Slack.chat('서식', '파일/폴더 저장 시작')
         get_files = GetFiles(driver)
         get_files.searching()
         total = get_files.success + get_files.fail
