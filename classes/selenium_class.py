@@ -178,6 +178,8 @@ class Browser:
         file_list = os.listdir(f'{DOWNLOAD_PATH}\\temp')
         if len(file_list) > 0:
             for d in file_list:
+                if d in filename: continue
+                print(f'{DOWNLOAD_PATH}\\temp\\{d} 삭제함..')
                 os.remove(f'{DOWNLOAD_PATH}\\temp\\{d}')
 
         t = 0

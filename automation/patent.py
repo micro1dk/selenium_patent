@@ -49,7 +49,7 @@ class Patent(Browser, PyautoGUI):
 
             self.click_image(
                 [f'{self.IMAGE_PATH}\\patent_login_1_1.PNG',
-                    f'{self.IMAGE_PATH}\\patent_login_1_2.PNG'],
+                    f'{self.IMAGE_PATH}\\patent_login_1_2.PNG', f'{self.IMAGE_PATH}\\patent_login_1_3.PNG'],
                 '공인인증서 구공호 버튼 없음', 0.5, 3, True
             )
 
@@ -172,8 +172,11 @@ class Patent(Browser, PyautoGUI):
                                 self.pyper_copy(
                                     f'{DOWNLOAD_PATH}\\temp\\2-{classify_no}.pdf')
                                 self.hot_key('alt', 'n')
-                                self.hot_key('ctrl', 'v')
+                                self.hot_key('ctrl', 'v'); time.sleep(0.3)
+                                print('복붙하기')
                                 self.press_key(['enter'])
+                                # self.click_image(f'{self.IMAGE_PATH}\\pdf_save_btn.PNG', '저장버튼없음', 0.5, 10, True)
+                                print('저장키')
                                 self.wait_download(
                                     f'{markinfo_acc_no}\\2-{classify_no}.pdf')
                                 self.driver.close()
