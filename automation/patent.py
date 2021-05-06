@@ -106,23 +106,23 @@ class Patent(Browser, PyautoGUI):
 
     def script_patent(self, today_dir, markinfo_acc_no):
         txt_file = open(f'{today_dir}\\_codes.txt')
+        text_list = txt_file.readlines()
+        
+        # 반드시 2줄 이상이어야함
+        if len(text_list) <= 1:
+            return 
 
-        complete_list = []
-        while True:
-            line = txt_file.readline()
-            if not line:
-                break
-            complete_list.append(line.split('\n')[0])
-        txt_file.close()
+        complete_list = [t.strip('\n') for t in text_list[1:]]
+        applicant_name = text_list[0]
 
         for complete in complete_list:
             accept_no, application_no, classify_no = complete.split(',')
             Slack.chat('서식상세', f'{accept_no}, {application_no}, {classify_no}류 탐색 시작')
             self.page_search(accept_no, application_no,
-                             classify_no, markinfo_acc_no)
+                             classify_no, markinfo_acc_no, applicant_name)
             print('complete!!')
     
-    def page_search(self, accept_no, application_no, classify_no, markinfo_acc_no):
+    def page_search(self, accept_no, application_no, classify_no, markinfo_acc_no, applicant_name):
         try:
             page, btn_cnt, cnt = 1, 1, 0
             total_page = int(self.driver.find_element_by_xpath(
@@ -160,6 +160,12 @@ class Patent(Browser, PyautoGUI):
                             self.switch_windows(self.spage + 1)
                             self.wait_element_visible(
                                 'xpath', '//*[@id="noprint"]/h3', 10)
+                            
+                            # 출원인 이름이 다른경우 어떤 기록을 남길것을 요청
+                            applicant_name_td = self.driver.find_element_by_xpath('/html/body/div/div/div[2]/table[2]/tbody/tr[4]/td[2]').text
+                            if applicant_name != applicant_name_td:
+                                Slack.chat('서식비고', f'{markinfo_acc_no} {classify}류 \n마크인포상세페이지 출원인 이름: {applicant_name}\n특허청 출원인 이름: {applicant_name_td}')
+
                             application_td = self.driver.find_element_by_xpath(
                                 '/html/body/div/div/div[2]/table[2]/tbody/tr[3]/td[2]').text
                             if application_no in application_td:
@@ -173,10 +179,10 @@ class Patent(Browser, PyautoGUI):
                                     f'{DOWNLOAD_PATH}\\temp\\2-{classify_no}.pdf')
                                 self.hot_key('alt', 'n')
                                 self.hot_key('ctrl', 'v'); time.sleep(0.3)
-                                print('복붙하기')
+
                                 self.press_key(['enter'])
                                 # self.click_image(f'{self.IMAGE_PATH}\\pdf_save_btn.PNG', '저장버튼없음', 0.5, 10, True)
-                                print('저장키')
+
                                 self.wait_download(
                                     f'{markinfo_acc_no}\\2-{classify_no}.pdf')
                                 self.driver.close()

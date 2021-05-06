@@ -37,56 +37,81 @@ class GetFiles(Browser, PyautoGUI):
             page_count = len(pagination_elem) - 4
 
             # 페이지 이동
-            i = 3
-            while True:
-                if i > 3:
-                    self.driver.find_element_by_xpath(
-                        f'//*[@id="form"]/div[4]/div/div/ul/li[{i}]/a').click()  # 페이지 이동
+            complete_list = []
+            wait_list = []
+            remove_list = []
+            for mode in range(1, 3):
+                i = 3
+                print(wait_list)
+                while True:
+                    if i > 3:
+                        self.driver.find_element_by_xpath(
+                            f'//*[@id="form"]/div[4]/div/div/ul/li[{i}]/a').click()  # 페이지 이동
 
-                # 시작하기
-                tbody = self.driver.find_element_by_xpath(
-                    '//*[@id="table-view"]/tbody')
-                tr_list = tbody.find_elements_by_class_name('template')
-                stack = []
-                fail_list = []
-                for tr in tr_list:
-                    state_1 = tr.find_element_by_xpath('td[6]').text
-                    state_2 = tr.find_element_by_xpath('td[7]/div/div/a').text
-                    number = tr.find_element_by_xpath('td[5]/div[1]').text
-                    link = tr.find_element_by_xpath('td[5]/div[3]/span/a')
-                    if state_1 == '최종제출동의' and state_2 == '처리대기' and number not in stack:
-                        Slack.chat('서식상세', f'1. {number} {link.text} 진행중...')
-                        link.click()
-                        self.wait_new_window(2, 0.3, 2.1)
-                        self.driver.switch_to.window(
-                            self.driver.window_handles[1])
-                        success, err = self.detail_page()  # 상세페이지에서 자료 다운
-                        self.driver.switch_to.window(
-                            self.driver.window_handles[0])
+                    # 시작하기
+                    tbody = self.driver.find_element_by_xpath(
+                        '//*[@id="table-view"]/tbody')
+                    tr_list = tbody.find_elements_by_class_name('template')                    
+                    for tr in tr_list:
+                        state_1 = tr.find_element_by_xpath('td[6]').text
+                        state_2 = tr.find_element_by_xpath('td[7]/div/div/a').text
+                        number = tr.find_element_by_xpath('td[5]/div[1]').text
+                        link = tr.find_element_by_xpath('td[5]/div[3]/span/a')
+                        # if state_1 == '최종제출동의' and state_2 == '처리대기' and number not in stack:
+                        
+                        if mode == 1: 
+                            if state_1 == '최종제출동의':
+                                if number not in remove_list:
+                                    if number not in wait_list:
+                                        wait_list.append(number)
+                        
+                            elif state_1 == '[무료]수정요청': 
+                                if number in wait_list:
+                                    wait_list.remove(number)
+                                    if number not in remove_list:
+                                        remove_list.append(number)
+                                else:
+                                    if number not in remove_list:
+                                        remove_list.append(number)
+
+                        elif mode == 2:
+                            if number in wait_list and number not in complete_list:
+                                complete_list.append(number)
+                                Slack.chat('서식상세', f'1. {number} {link.text} 진행중...')
+                                link.click()
+                                self.wait_new_window(2, 0.3, 2.1)
+                                self.driver.switch_to.window(
+                                    self.driver.window_handles[1])
+                                success, err = self.detail_page()  # 상세페이지에서 자료 다운
+                                self.driver.switch_to.window(
+                                    self.driver.window_handles[0])
+                                if success:
+                                    self.success += 1
+                                else:
+                                    self.fail += 1
+
+                                
+
+
+                    if i == 12: # 다음버튼인듯
+                        success, attr = check_attribute(
+                            self.driver, f'//*[@id="form"]/div[4]/div/div/ul/li[{i + 1}]/a', 'disabled')
                         if success:
-                            # accept_no_list.append(number)
-                            stack.append(number)
-                            self.success += 1
-                        else:
-                            self.fail += 1
+                            if attr != 'disabled':
+                                self.driver.find_element_by_xpath(
+                                    f'//*[@id="form"]/div[4]/div/div/ul/li[{i + 1}]/a').click()
+                                pagination = self.driver.find_element_by_xpath(
+                                    '//*[@id="form"]/div[5]/div/div/ul')
+                                pagination_elem = pagination.find_elements_by_tag_name(
+                                    'li')
+                                page_count = len(pagination_elem) - 4
+                                i = 3
+                                continue
+                    if i == page_count + 2:
+                        break
+                    i += 1
 
-                if i == 12:
-                    success, attr = check_attribute(
-                        self.driver, f'//*[@id="form"]/div[4]/div/div/ul/li[{i + 1}]/a', 'disabled')
-                    if success:
-                        if attr != 'disabled':
-                            self.driver.find_element_by_xpath(
-                                f'//*[@id="form"]/div[4]/div/div/ul/li[{i + 1}]/a').click()
-                            pagination = self.driver.find_element_by_xpath(
-                                '//*[@id="form"]/div[5]/div/div/ul')
-                            pagination_elem = pagination.find_elements_by_tag_name(
-                                'li')
-                            page_count = len(pagination_elem) - 4
-                            i = 3
-                            continue
-                if i == page_count + 2:
-                    break
-                i += 1
+
         except Exception as e:
             print(f'매니저 전체 클릭 후 검색에서 에러\n{e}')
             raise Exception(e)
@@ -211,13 +236,16 @@ class GetFiles(Browser, PyautoGUI):
             self.driver.switch_to.window(
                 self.driver.window_handles[2])  # 위임장 창으로 이동
             Slack.chat('서식상세', f'　└        warrant.pdf 위임장 다운로드')
-            self.wait_image_visible(
-                f'{CURRENT_PATH}\\images\\adminpage\\adminpage_pdf_down.PNG', 0.5, 10)
+            s, elmnt = self.wait_image_visible(
+                f'{CURRENT_PATH}\\images\\adminpage\\adminpage_pdf_down.PNG', 0.5, 4)
+            if not s:
+                raise Exception(f'위임장 화면 에러')
+    
             self.driver.execute_script('window.print();')
             time.sleep(1)
             self.press_key(['enter'])
             self.wait_image_visible(
-                f'{CURRENT_PATH}\\images\\adminpage\\adminpage_save_start.PNG', 0.5, 10)
+                f'{CURRENT_PATH}\\images\\adminpage\\adminpage_save_start.PNG', 0.5, 4)
             self.pyper_copy(f'{DOWNLOAD_PATH}\\temp\\warrant.pdf')
             self.hot_key('alt', 'n')
             self.hot_key('ctrl', 'v')
@@ -229,6 +257,7 @@ class GetFiles(Browser, PyautoGUI):
             self.driver.close()
             self.driver.switch_to.window(self.driver.window_handles[1])
         except Exception as e:
+            print('위임장 에러', e)
             raise Exception(f'위임장 다운과정에서 에러\n{e}')
 
     def upload_pdf(self, accept_no, classify_map):
@@ -300,9 +329,19 @@ class GetFiles(Browser, PyautoGUI):
             # 인감확인하고 위임장 다운받기
             self.download_pdf()
 
-            # 주문번호 폴더로 옮기기
-            self.movement(self.driver.find_element_by_xpath(
-                '/html/body/div[2]/div/div[4]/div/div[1]/div/div[2]/div[2]').text)
+            app_num = self.driver.find_element_by_xpath(
+                '/html/body/div[2]/div/div[4]/div/div[1]/div/div[2]/div[2]').text
+
+             # 주문번호 폴더로 옮기기
+            self.movement(app_num)
+
+            if not os.path.isfile(f'{DOWNLOAD_PATH}\\{app_num}\\_codes.txt'):
+
+                applicant_name = self.driver.find_element_by_xpath('//*[@id="tab-2"]/div/table[1]/tbody/tr[2]/td[1]').text
+                # 출원인 txt 파일에 저장하기
+                f = open(f'{DOWNLOAD_PATH}\\{app_num}\\_codes.txt', 'a', encoding='utf-8')
+                f.write(f'{applicant_name}\n')
+                f.close()
 
             # 드라이버 종료
             self.driver.close()
@@ -312,9 +351,14 @@ class GetFiles(Browser, PyautoGUI):
 
         except Exception as e:
             print(f'상세페이지 에러\n{e}')
-            if len(self.driver.window_handles[0]) > 1:
-                self.driver.close()
-                self.driver.switch_to.window(self.driver.window_handles[0])
+            self.close_window_except_first()
+            for d in os.listdir(f'{DOWNLOAD_PATH}'):
+                if d.endswith('.BIB') or d.endswith('.jpg') or d.endswith('.pdf'):
+                    os.remove(f'{DOWNLOAD_PATH}\\{d}')
+            Slack.chat('서식상세', f'　└        에러발생: {e}')
+            # if len(self.driver.window_handles[0]) > 1:
+            #     self.driver.close()
+            #     self.driver.switch_to.window(self.driver.window_handles[0])
             return False, e
 
 

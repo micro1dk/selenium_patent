@@ -27,7 +27,7 @@ class UploadFiles(Browser, PyautoGUI):
                     break
                 complete_list.append(line.split('\n')[0])
             txt_file.close()
-            return complete_list
+            return complete_list[1:]
         except Exception as e:
             return []
         

@@ -197,3 +197,11 @@ class Browser:
                     return True
             t += delay
             time.sleep(delay)
+
+    def close_window_except_first(self):
+        while True:
+            self.switch_windows(1)
+            if len(self.driver.window_handles) == 1:
+                return
+            self.switch_windows(2)
+            self.driver.close()

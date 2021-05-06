@@ -40,3 +40,70 @@ from paths import *
 # for f in os.listdir(PATENT_HISTORY_PATH):
 #     if f.endswith('.zip'):
 #         os.remove(f'{PATENT_HISTORY_PATH}\\{f}')
+
+# a = ['aa', 'bb', 'cc']
+# a.pop(1)
+# print(a)
+
+# aa = [
+#     ('20210503_0073', 'a'),
+#     ('20210503_0073', 'a'), 
+#     ('20210503_0075', 'a'), 
+#     ('20210503_0075', 'b'), 
+#     ('20210503_0075', 'a'),
+#     ('20210503_0080', 'b'),
+#     ('20210503_0080', 'b'),
+#     ('20210503_0080', 'a'),
+#     ('20210503_0111', 'a'),
+#     ('20210503_0111', 'a'),
+#     ('20210503_0166', 'b'),
+
+# ]
+
+# wait_list = []
+# remove_list = []
+# complete_list = []
+
+# for mode in range(1, 3):
+#     if mode == 1:
+#         for a, b in aa:
+#             if b == 'a':
+#                 if a not in remove_list and a not in wait_list:
+#                     wait_list.append(a)
+                
+#             elif b == 'b':
+#                 if a in wait_list:
+#                     wait_list.remove(a)
+#                     if a not in remove_list:
+#                         remove_list.append(a)
+#                 else:
+#                     if a not in remove_list:
+#                         remove_list.append(a)
+#     elif mode == 2:
+#         for a, b in aa:
+#             if a in wait_list and a not in complete_list:
+#                 print(a, b, '진행')
+#                 complete_list.append(a)
+
+# print(wait_list)
+# print(remove_list)
+
+# f = open('./testtxt.txt', 'r', encoding='utf-8')
+
+# t_list = f.readlines()
+# t_1 = t_list[0].strip('\n')
+# t_2 = [t.strip('\n') for t in t_list[1:]]
+# print(t_1, t_2)
+# f = open('./testtxt.txt', 'r', encoding='utf-8')
+
+# complete_list = []
+# while True:
+#     line = f.readline()
+#     if not line:
+#         break
+#     complete_list.append(line.split('\n')[0])
+# print(complete_list)
+
+import os
+
+print(os.path.isfile('./testtdxt.txt'))
