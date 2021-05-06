@@ -3,8 +3,8 @@ from datetime import datetime, timedelta, date
 today = datetime.now()
 
 WINDOW_SIZE = '1300,1000'
-# CURRENT_PATH = 'C:\\Users\\user\\Desktop\\auto\\selenium_patent'
-CURRENT_PATH = 'C:\\Users\\MKINFO22\\Desktop\\seosik_2'
+CURRENT_PATH = 'C:\\Users\\user\\Desktop\\auto\\selenium_patent'
+# CURRENT_PATH = 'C:\\Users\\MKINFO22\\Desktop\\seosik_2'
 CHROMEDRIVER_PATH = f'{CURRENT_PATH}\\driver\\chromedriver.exe'
 DATETIME_NOW = datetime.now().strftime("%Y%m%d_%H%M%S")
 DATETIME_TODAY = datetime.now().strftime("%Y%m%d")

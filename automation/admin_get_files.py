@@ -27,7 +27,7 @@ class GetFiles(Browser, PyautoGUI):
             ul_select = self.driver.find_element_by_xpath(
                 '//*[@id="form"]/div[1]/div[1]/div/div[4]/div/ul')
             li_select = ul_select.find_elements_by_tag_name('li')
-            li_select[len(li_select) - 1].click() # 전체는 -1
+            li_select[len(li_select) - 11].click() # 전체는 -1
             self.driver.find_element_by_xpath('//*[@id="search"]').click()
 
             # paginate
@@ -181,6 +181,8 @@ class GetFiles(Browser, PyautoGUI):
                 '/html/body/div[2]/div/div[3]/div/div[2]/div[2]/ul[1]/li[2]/a').click()
             sign_text = self.driver.find_element_by_xpath(
                 '//*[@id="tab-2"]/div/table[1]/tbody/tr[4]/td[1]/div/button[1]').text
+            self.app_num = self.driver.find_element_by_xpath(
+                '/html/body/div[2]/div/div[4]/div/div[1]/div/div[2]/div[2]').text
             if sign_text == '만들기':
                 self.driver.find_element_by_xpath(
                     '//*[@id="tab-2"]/div/table[1]/tbody/tr[4]/td[1]/div/button[1]').click()
@@ -329,17 +331,14 @@ class GetFiles(Browser, PyautoGUI):
             # 인감확인하고 위임장 다운받기
             self.download_pdf()
 
-            app_num = self.driver.find_element_by_xpath(
-                '/html/body/div[2]/div/div[4]/div/div[1]/div/div[2]/div[2]').text
-
              # 주문번호 폴더로 옮기기
-            self.movement(app_num)
+            self.movement(self.app_num)
 
-            if not os.path.isfile(f'{DOWNLOAD_PATH}\\{app_num}\\_codes.txt'):
+            if not os.path.isfile(f'{DOWNLOAD_PATH}\\{self.app_num}\\_codes.txt'):
 
                 applicant_name = self.driver.find_element_by_xpath('//*[@id="tab-2"]/div/table[1]/tbody/tr[2]/td[1]').text
                 # 출원인 txt 파일에 저장하기
-                f = open(f'{DOWNLOAD_PATH}\\{app_num}\\_codes.txt', 'a', encoding='utf-8')
+                f = open(f'{DOWNLOAD_PATH}\\{self.app_num}\\_codes.txt', 'a', encoding='utf-8')
                 f.write(f'{applicant_name}\n')
                 f.close()
 

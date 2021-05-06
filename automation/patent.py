@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import time
 import shutil
@@ -105,7 +106,7 @@ class Patent(Browser, PyautoGUI):
             raise Exception(e)
 
     def script_patent(self, today_dir, markinfo_acc_no):
-        txt_file = open(f'{today_dir}\\_codes.txt')
+        txt_file = open(f'{today_dir}\\_codes.txt', 'r', encoding='utf-8')
         text_list = txt_file.readlines()
         
         # 반드시 2줄 이상이어야함
@@ -163,9 +164,18 @@ class Patent(Browser, PyautoGUI):
                             
                             # 출원인 이름이 다른경우 어떤 기록을 남길것을 요청
                             applicant_name_td = self.driver.find_element_by_xpath('/html/body/div/div/div[2]/table[2]/tbody/tr[4]/td[2]').text
-                            if applicant_name != applicant_name_td:
-                                Slack.chat('서식비고', f'{markinfo_acc_no} {classify}류 \n마크인포상세페이지 출원인 이름: {applicant_name}\n특허청 출원인 이름: {applicant_name_td}')
-
+                            reg_name = '(.*)\(\d'
+                            match = re.search(reg_name, applicant_name_td)
+                            if match:
+                                applicant_name_patent = match.group(1)
+                                print(applicant_name_patent, '특허청 기록된 이름')
+                                if applicant_name != applicant_name_patent:
+                                    print('틀려')
+                                    Slack.chat('서식비고', f'{markinfo_acc_no} {classify_no}류 \n마크인포상세페이지 출원인 이름: {applicant_name}\n특허청 출원인 이름: {applicant_name_patent}')
+                            else:
+                                print('reg not matched')
+                                Slack.chat('서식비고', f'{markinfo_acc_no} {classify_no}류 \n특허청 출원인 이름: {applicant_name_td} 확인바람.')
+                            
                             application_td = self.driver.find_element_by_xpath(
                                 '/html/body/div/div/div[2]/table[2]/tbody/tr[3]/td[2]').text
                             if application_no in application_td:

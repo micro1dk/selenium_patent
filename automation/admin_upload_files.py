@@ -19,15 +19,9 @@ class UploadFiles(Browser, PyautoGUI):
     
     def open_codes(self, f):
         try:
-            txt_file = open(f'{FOLDER_DIR}\\{f}\\_codes.txt')
-            complete_list = []
-            while True:
-                line = txt_file.readline()
-                if not line:
-                    break
-                complete_list.append(line.split('\n')[0])
-            txt_file.close()
-            return complete_list[1:]
+            txt_file = open(f'{FOLDER_DIR}\\{f}\\_codes.txt', 'r', encoding='utf-8')
+            txt_list = txt_file.readlines()
+            return [t.strip('\n') for t in txt_list[1:]]
         except Exception as e:
             return []
         
@@ -80,8 +74,8 @@ class UploadFiles(Browser, PyautoGUI):
                     continue
                 
                 complete_cnt = 0
-                for complete in complete_list:
-                    accept_no, application_no, classify_no = complete.split(',')
+                for com in complete_list:
+                    accept_no, application_no, classify_no = com.split(',')
                     # print('page_search _before')
                     Slack.chat('서식상세', f'admin 페이지 {f} {classify_no}류 시작')
                     # 한줄마다 페이지 전체를 순회하여 검색
@@ -130,9 +124,9 @@ class UploadFiles(Browser, PyautoGUI):
                     # print('발견!!!=====================')
                     time.sleep(2)
                     self.driver.find_element_by_xpath(f'//*[@id="table-view"]/tbody/tr[{j}]/td[5]/div[3]/span/a').click()
-                    self.driver.switch_to.window(self.driver.window_handles[1])
+                    self.switch_windows(2)
                     success = self.detail_page(accept_no, application_no, classify_no, markinfo_acc_no, complete)
-
+                    self.switch_windows(1)
                     time.sleep(1)
                     # print('ok 상세페이지 업로드 성공?', success)
                     self.driver.close()
@@ -228,26 +222,25 @@ class UploadFiles(Browser, PyautoGUI):
 
                         shutil.copytree(f'{FOLDER_DIR}\\{markinfo_acc_no}', f'{TARGET_DAY}\\{markinfo_acc_no}')
 
-                        elnt = self.driver.find_element_by_xpath('/html/body/div[2]/div/div[3]/div/div[2]/div[1]/table/tbody/tr[3]/td[2]/div[4]')
-                        print(elnt.text)
-        
-                        # if '출원컨펌요청' in elnt.text:
-                        #     raise Exception('출원컨펌요청이네요')
-                        # elnt.click()
+                        time.sleep(1)
+                        elnt = self.driver.find_element_by_xpath('//*[@id="result_report"]/span')
+ 
+                        if '출원컨펌요청' in elnt.text:
+                            raise Exception('출원컨펌요청이네요')
+                        elnt.click()
                         
-                        # self.wait_new_window(2, 0.5)
-                        # self.switch_windows(2)
-                        # Slack.chat('서식상세', f'└         메일 & 알림톡 전송 (끝)')
-                        # self.click('xpath', '/html/body/div[1]/div[2]/div[1]/div/button[1]'); time.sleep(2)
-                        # self.driver.close()
-                        # self.switch_windows(1)
+                        self.wait_new_window(3, 0.5)
+                        self.switch_windows(3)
+                        self.click('xpath', '/html/body/div[1]/div[2]/div[1]/div/button[1]')
+                        # alert = self.wait_alert()
+                        # self.accept_alert(alert); time.sleep(0.5)
+                        time.sleep(10)
+                        # alert = self.wait_alert()
+                        # self.accept_alert(alert); time.sleep(0.5)
 
-                        # 만약 폴더명을 이름으로 지정한다면
-                        # self.click('xpath', '/html/body/div[2]/div/div[3]/div/div[2]/div[2]/ul[1]/li[2]/a')
-                        # name = self.find_element_by_xpath('//*[@id="tab-2"]/div/table[1]/tbody/tr[2]/td[1]').text
-
+                        self.switch_windows(2)
                         
-                        
+                        Slack.chat('서식상세', f'└         메일 & 알림톡 전송 (끝)')
 
             return True
         except Exception as e:

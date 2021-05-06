@@ -315,11 +315,11 @@ class Keaps(PyautoGUI):
                 self.press_key(['enter'])
                 self.click_image(f'{self.IMAGE_PATH}\\final_submit_search_submit.PNG',
                                 'wait element visible 에러: 온라인제출 > 최종제출 버튼 에러',  0.4, 8, True)
-                # 예 버튼 최종제출
-                self.click_image(
-                    f'{self.IMAGE_PATH}\\document_create_yes.PNG',
-                    'wait element visible 에러: document_create_yes.PNG와 일치하는 이미지가 없음 (최종제출 > 예)', 0.5, 4, True
-                )
+                # # 예 버튼 최종제출
+                # self.click_image(
+                #     f'{self.IMAGE_PATH}\\document_create_yes.PNG',
+                #     'wait element visible 에러: document_create_yes.PNG와 일치하는 이미지가 없음 (최종제출 > 예)', 0.5, 4, True
+                # )
 
                 time.sleep(3)
                 # 제출결과 안내 뜰 때까지 대기?

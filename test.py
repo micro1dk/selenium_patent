@@ -104,6 +104,37 @@ from paths import *
 #     complete_list.append(line.split('\n')[0])
 # print(complete_list)
 
-import os
+# import os
 
-print(os.path.isfile('./testtdxt.txt'))
+# print(os.path.isfile('./testtdxt.txt'))
+
+# import re
+# reg_name = '(.*)\(\d'
+
+# target = '주식회사 기지개핌(z1-2021-034521-6)'
+# match = re.search(reg_name, target)
+
+# print(match)
+# # print(match.group(1))
+
+def open_codes():
+    try:
+        txt_file = open(f'testtxt.txt', 'r', encoding='utf-8')
+        txt_list = txt_file.readlines()
+        return [t.strip('\n') for t in txt_list[1:]]
+    except Exception as e:
+        return []
+
+complete_list = open_codes()
+complete_length = len(complete_list)
+
+complete_cnt = 0
+for com in complete_list:
+    accept_no, application_no, classify_no = com.split(',')
+    # print('page_search _before')
+    # 한줄마다 페이지 전체를 순회하여 검색
+    print(com)
+    if complete_cnt == complete_length - 1:
+        complete = True # 마지막 항목일 때 True
+        print('마지막 시작')
+    complete_cnt += 1
