@@ -17,6 +17,8 @@ class GetFiles(Browser, PyautoGUI):
         self.driver = driver
         self.success = 0
         self.fail = 0
+        self.pass_list = []
+        self.applicant_name = ''
     
     def searching(self):
         try:
@@ -27,7 +29,7 @@ class GetFiles(Browser, PyautoGUI):
             ul_select = self.driver.find_element_by_xpath(
                 '//*[@id="form"]/div[1]/div[1]/div/div[4]/div/ul')
             li_select = ul_select.find_elements_by_tag_name('li')
-            li_select[len(li_select) - 11].click() # 전체는 -1
+            li_select[len(li_select) - 1].click() # 전체는 -1
             self.driver.find_element_by_xpath('//*[@id="search"]').click()
 
             # paginate
@@ -118,6 +120,7 @@ class GetFiles(Browser, PyautoGUI):
 
     def download_bib(self):
         try:
+            self.click('xpath', '/html/body/div[2]/div/div[3]/div/div[2]/div[2]/ul[1]/li[4]/a'); time.sleep(0.2)
             bib_btns = self.driver.find_elements_by_class_name('bib_btn')
             bib_classifies = self.driver.find_elements_by_class_name(
                 'classify_bib')
@@ -127,10 +130,11 @@ class GetFiles(Browser, PyautoGUI):
             for i in range(len(bib_btns)):
                 btn = bib_btns[i]
                 classify = bib_classifies[i].get_attribute('value')
-                Slack.chat('서식상세', f'　└        BIB_{classify}.BIB 다운로드')
-                btn.click()
-                success_download = self.wait_download(f'BIB_{classify}.BIB')
-                time.sleep(1.3)
+                if classify not in self.pass_list:
+                    Slack.chat('서식상세', f'　└        BIB_{classify}.BIB 다운로드')
+                    btn.click()
+                    success_download = self.wait_download(f'BIB_{classify}.BIB')
+                    time.sleep(1.3)
             if not success_download:
                 raise Exception('bib 다운로드 실패함')
         except Exception as e:
@@ -139,26 +143,33 @@ class GetFiles(Browser, PyautoGUI):
     
     def download_image(self):
         try:
-            self.driver.find_element_by_xpath(
+            self.driver.find_element_by_xpath( # 인명정보 클릭
                 '/html/body/div[2]/div/div[3]/div/div[2]/div[2]/ul[1]/li[1]/a').click()
             tbody = self.driver.find_element_by_xpath(
                 '//*[@id="tab-1"]/div/table/tbody')
             tr_list = tbody.find_elements_by_tag_name('tr')
+            temp = ''
             for i in range(len(tr_list)):
                 if i % 2 == 0:  # 짝수에서 분류코드
                     classify = tr_list[i].find_element_by_xpath(
                         'td[3]/div[1]').text
+                    temp = classify
+                    state = tr_list[i].find_element_by_xpath(
+                        'td[5]/div[2]/span[1]').text
+                    if state != '컨펌요청':
+                        self.pass_list.append(classify)
                 else:  # 홀수에서 이미지 썸네일
-                    src = tr_list[i].find_element_by_tag_name(
-                        'img').get_attribute('src')
-                    if src == 'https://markinfo.co.kr/common/images/no_image_file.png':
-                        raise Exception('상표 이미지 업로드 바람')
-                    Slack.chat('서식상세', f'　└        logo_{classify}.jpg 다운로드')
-                    res = requests.get(src)
-                    img = open(
-                        f'{DOWNLOAD_PATH}\\logo_{classify[:-1]}.jpg', 'wb')
-                    img.write(res.content)
-                    img.close()
+                    if temp not in self.pass_list:
+                        src = tr_list[i].find_element_by_tag_name(
+                            'img').get_attribute('src')
+                        if src == 'https://markinfo.co.kr/common/images/no_image_file.png':
+                            raise Exception('상표 이미지 업로드 바람')
+                        Slack.chat('서식상세', f'　└        logo_{classify}.jpg 다운로드')
+                        res = requests.get(src)
+                        img = open(
+                            f'{DOWNLOAD_PATH}\\logo_{classify[:-1]}.jpg', 'wb')
+                        img.write(res.content)
+                        img.close()
         except Exception as e:
             raise Exception(f'상표 이미지 다운로드 과정에서 에러\n{e}')
 
@@ -179,6 +190,9 @@ class GetFiles(Browser, PyautoGUI):
                 'xpath', '/html/body/div[2]/div/div[3]/div/div[2]/div[2]/ul[1]/li[2]/a', 10)
             self.driver.find_element_by_xpath(
                 '/html/body/div[2]/div/div[3]/div/div[2]/div[2]/ul[1]/li[2]/a').click()
+            # 출원인 이름 먼저 저장
+            self.applicant_name = self.driver.find_element_by_xpath('//*[@id="tab-2"]/div/table[1]/tbody/tr[2]/td[1]').text
+
             sign_text = self.driver.find_element_by_xpath(
                 '//*[@id="tab-2"]/div/table[1]/tbody/tr[4]/td[1]/div/button[1]').text
             self.app_num = self.driver.find_element_by_xpath(
@@ -262,46 +276,6 @@ class GetFiles(Browser, PyautoGUI):
             print('위임장 에러', e)
             raise Exception(f'위임장 다운과정에서 에러\n{e}')
 
-    def upload_pdf(self, accept_no, classify_map):
-        try:
-            if classify_map == {}:
-                raise Exception('텍스트파일이 비어있음')
-
-            accept_folder_dir = os.listdir(f'{FOLDER_DIR}\\{accept_no}')
-            div = self.driver.find_element_by_xpath('//*[@id="tab-4"]/div[2]')
-            table_list = div.find_elements_by_tag_name('table')
-
-            for table in table_list[1:-1]:
-                application_input = table.find_element_by_class_name(
-                    'application_number')
-                classify_number = table.find_element_by_class_name(
-                    'classify_bib').text
-
-                if classify_number not in classify_map:
-                    raise Exception('분류코드가 잘못됨')
-                application_input.send_keys(classify_map[classify_number])
-                self.driver.find_element_by_xpath(
-                    '//*[@id="tab-4"]/div[2]/table[2]/tbody/tr[2]/td[2]/div/div/button').click()
-                success, alert = self.exist_alert()
-                if success:
-                    self.accept_alert(alert)
-
-            # 파일 업로드하기
-            self.driver.find_element_by_xpath(
-                '//*[@id="tab-4"]/div[2]/table[3]/tbody/tr/td/button').click()
-            pdf_input = self.driver.find_element_by_xpath(
-                '//*[@id="form_upload_02"]/div[1]/input[2]')
-            multi = ''
-            for f in list(classify_map.keys()):
-                multi += f'"{FOLDER_DIR}\\{accept_no}\\1-{f}.pdf" "{FOLDER_DIR}\\{accept_no}\\2-{f}.pdf"'
-
-            pdf_input.click()
-
-            return True, ''
-        except Exception as e:
-            return False, e
-            # raise Exception(f'PDF 업로드하는 과정에서 에러\n{e}')
-
     def detail_page(self, url=''):
         try:
             # 폴더 생성
@@ -322,11 +296,12 @@ class GetFiles(Browser, PyautoGUI):
             tables = table_container.find_elements_by_tag_name('table')
 
             # if len(tables) == 3:
+            # 이미지 다운로드
+            self.download_image()
+
             # 다운로드 시작
             self.download_bib()  # 다운로드 완료를 기다려야 할듯..
 
-            # 이미지 다운로드
-            self.download_image()
 
             # 인감확인하고 위임장 다운받기
             self.download_pdf()
@@ -335,11 +310,9 @@ class GetFiles(Browser, PyautoGUI):
             self.movement(self.app_num)
 
             if not os.path.isfile(f'{DOWNLOAD_PATH}\\{self.app_num}\\_codes.txt'):
-
-                applicant_name = self.driver.find_element_by_xpath('//*[@id="tab-2"]/div/table[1]/tbody/tr[2]/td[1]').text
                 # 출원인 txt 파일에 저장하기
                 f = open(f'{DOWNLOAD_PATH}\\{self.app_num}\\_codes.txt', 'a', encoding='utf-8')
-                f.write(f'{applicant_name}\n')
+                f.write(f'{self.applicant_name}\n')
                 f.close()
 
             # 드라이버 종료

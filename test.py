@@ -117,24 +117,51 @@ from paths import *
 # print(match)
 # # print(match.group(1))
 
-def open_codes():
-    try:
-        txt_file = open(f'testtxt.txt', 'r', encoding='utf-8')
-        txt_list = txt_file.readlines()
-        return [t.strip('\n') for t in txt_list[1:]]
-    except Exception as e:
-        return []
+# def open_codes():
+#     try:
+#         txt_file = open(f'testtxt.txt', 'r', encoding='utf-8')
+#         txt_list = txt_file.readlines()
+#         return [t.strip('\n') for t in txt_list[1:]]
+#     except Exception as e:
+#         return []
 
-complete_list = open_codes()
-complete_length = len(complete_list)
+# complete_list = open_codes()
+# complete_length = len(complete_list)
 
-complete_cnt = 0
-for com in complete_list:
-    accept_no, application_no, classify_no = com.split(',')
-    # print('page_search _before')
-    # 한줄마다 페이지 전체를 순회하여 검색
-    print(com)
-    if complete_cnt == complete_length - 1:
-        complete = True # 마지막 항목일 때 True
-        print('마지막 시작')
-    complete_cnt += 1
+# complete_cnt = 0
+# for com in complete_list:
+#     accept_no, application_no, classify_no = com.split(',')
+#     # print('page_search _before')
+#     # 한줄마다 페이지 전체를 순회하여 검색
+#     print(com)
+#     if complete_cnt == complete_length - 1:
+#         complete = True # 마지막 항목일 때 True
+#         print('마지막 시작')
+#     complete_cnt += 1
+
+test_list = [
+    ('11', '컨펌요청'),
+    ('src', 'temp'),
+    ('02', '출원완료'),
+    ('src', ''),
+    ('05', '출원완료'),
+    ('src', ''),
+    ('66', '컨펌요청'),
+    ('src', ''),
+]
+
+pass_list = []
+
+temp = ''
+for i in range(len(test_list)):
+    if i % 2 == 0:
+        classify = test_list[i][0]
+        temp = classify
+        state = test_list[i][1]
+        if state != '컨펌요청':
+            pass_list.append(classify)
+    else:
+        if temp not in pass_list:
+            print(temp)
+
+print(pass_list)

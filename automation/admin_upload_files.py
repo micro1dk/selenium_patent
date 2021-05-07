@@ -120,7 +120,7 @@ class UploadFiles(Browser, PyautoGUI):
                     f'//*[@id="table-view"]/tbody/tr[{j}]/td[7]')  # 회신사항
 
                 # print(markinfo_acc_no, title_elem.text)
-                if '최종제출동의' == reply_elem.text and '처리대기' in state_elem.text and markinfo_acc_no in title_elem.text and f'{classify_no}류' in title_elem.text:
+                if '최종제출동의' == reply_elem.text and '처리대기' in state_elem.text and markinfo_acc_no in title_elem.text and f'({classify_no}류)' in title_elem.text:
                     # print('발견!!!=====================')
                     time.sleep(2)
                     self.driver.find_element_by_xpath(f'//*[@id="table-view"]/tbody/tr[{j}]/td[5]/div[3]/span/a').click()
@@ -232,9 +232,9 @@ class UploadFiles(Browser, PyautoGUI):
                         self.wait_new_window(3, 0.5)
                         self.switch_windows(3)
                         self.click('xpath', '/html/body/div[1]/div[2]/div[1]/div/button[1]')
+                        time.sleep(10)
                         # alert = self.wait_alert()
                         # self.accept_alert(alert); time.sleep(0.5)
-                        time.sleep(10)
                         # alert = self.wait_alert()
                         # self.accept_alert(alert); time.sleep(0.5)
 
