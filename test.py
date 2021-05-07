@@ -139,29 +139,36 @@ from paths import *
 #         print('마지막 시작')
 #     complete_cnt += 1
 
-test_list = [
-    ('11', '컨펌요청'),
-    ('src', 'temp'),
-    ('02', '출원완료'),
-    ('src', ''),
-    ('05', '출원완료'),
-    ('src', ''),
-    ('66', '컨펌요청'),
-    ('src', ''),
-]
+#
+#  test_list = [
+#     ('11', '컨펌요청'),
+#     ('src', 'temp'),
+#     ('02', '출원완료'),
+#     ('src', ''),
+#     ('05', '출원완료'),
+#     ('src', ''),
+#     ('66', '컨펌요청'),
+#     ('src', ''),
+# ]
 
-pass_list = []
+# pass_list = []
 
-temp = ''
-for i in range(len(test_list)):
-    if i % 2 == 0:
-        classify = test_list[i][0]
-        temp = classify
-        state = test_list[i][1]
-        if state != '컨펌요청':
-            pass_list.append(classify)
-    else:
-        if temp not in pass_list:
-            print(temp)
+# temp = ''
+# for i in range(len(test_list)):
+#     if i % 2 == 0:
+#         classify = test_list[i][0]
+#         temp = classify
+#         state = test_list[i][1]
+#         if state != '컨펌요청':
+#             pass_list.append(classify)
+#     else:
+#         if temp not in pass_list:
+#             print(temp)
 
-print(pass_list)
+# print(pass_list)
+
+test = ['22', '11']
+tt = '류' if len(test) > 0 else ''
+t = '류, '.join(test) + '류' if len(test) > 0 else ''
+
+print(t)

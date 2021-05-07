@@ -16,6 +16,7 @@ class UploadFiles(Browser, PyautoGUI):
         self.fail = 0
         self.complete_list = []
         self.folder_fail = 0
+        self.result_list = [] # slack 결과안내
     
     def open_codes(self, f):
         try:
@@ -85,6 +86,7 @@ class UploadFiles(Browser, PyautoGUI):
                     complete_cnt += 1
 
                     print('complete!')
+                self.result_list = []
         except Exception as e:
             print(f'visit_folder 에러{e}')
             raise Exception(e)
@@ -135,9 +137,7 @@ class UploadFiles(Browser, PyautoGUI):
                     if success:
                         self.click('xpath', f'//*[@id="table-view"]/tbody/tr[{j}]/td[7]/div/div/a') # 처리대기 클릭
                         self.click('xpath', f'//*[@id="table-view"]/tbody/tr[{j}]/td[7]/div/div/ul/li[4]/a') # 처리완료 클릭
-
-                    # 처리대기 클릭
-                    Slack.chat('서식상세', f'└        상태값 처리완료로')
+                        Slack.chat('서식상세', f'└        상태값 처리완료로')
                     self.click(
                         'xpath', f'//*[@id="table-view"]/tbody/tr[{j}]/td[7]/div/div/a')
                     time.sleep(3)
@@ -239,11 +239,15 @@ class UploadFiles(Browser, PyautoGUI):
                         # self.accept_alert(alert); time.sleep(0.5)
 
                         self.switch_windows(2)
-                        
+                        self.result_list.append(classify_no)
+                        t = '류, '.join(self.result_list) + '류' if len(test) > 0 else ''
+                        Slack.chat('서식', f'{markinfo_acc_no} {t} 완료!')
                         Slack.chat('서식상세', f'└         메일 & 알림톡 전송 (끝)')
-
+                    else:
+                        self.result_list.append(classify_no)
             return True
         except Exception as e:
+            Slack.chat('서식', f'{markinfo_acc_no} {classify_no}류 에러!')
             print(f'출원번호 입력 과정에서 에러\n{e}')
             return False
 
