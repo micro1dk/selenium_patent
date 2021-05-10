@@ -30,6 +30,7 @@ class GetFiles(Browser, PyautoGUI):
                 '//*[@id="form"]/div[1]/div[1]/div/div[4]/div/ul')
             li_select = ul_select.find_elements_by_tag_name('li')
             li_select[len(li_select) - 1].click() # 전체는 -1 
+            # li_select[1].click() # 전체는 -1 
             self.driver.find_element_by_xpath('//*[@id="search"]').click()
 
             # paginate

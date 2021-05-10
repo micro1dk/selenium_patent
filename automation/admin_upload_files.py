@@ -75,6 +75,7 @@ class UploadFiles(Browser, PyautoGUI):
                     continue
                 
                 complete_cnt = 0
+                complete = False
                 for com in complete_list:
                     accept_no, application_no, classify_no = com.split(',')
                     # print('page_search _before')
@@ -128,11 +129,11 @@ class UploadFiles(Browser, PyautoGUI):
                     self.driver.find_element_by_xpath(f'//*[@id="table-view"]/tbody/tr[{j}]/td[5]/div[3]/span/a').click()
                     self.switch_windows(2)
                     success = self.detail_page(accept_no, application_no, classify_no, markinfo_acc_no, complete)
+                    self.driver.close()
+
                     self.switch_windows(1)
                     time.sleep(1)
                     # print('ok 상세페이지 업로드 성공?', success)
-                    self.driver.close()
-                    self.driver.switch_to.window(self.driver.window_handles[0])
 
                     if success:
                         self.click('xpath', f'//*[@id="table-view"]/tbody/tr[{j}]/td[7]/div/div/a') # 처리대기 클릭
@@ -232,22 +233,22 @@ class UploadFiles(Browser, PyautoGUI):
                         self.wait_new_window(3, 0.5)
                         self.switch_windows(3)
                         self.click('xpath', '/html/body/div[1]/div[2]/div[1]/div/button[1]')
-                        time.sleep(10)
-                        # alert = self.wait_alert()
-                        # self.accept_alert(alert); time.sleep(0.5)
-                        # alert = self.wait_alert()
-                        # self.accept_alert(alert); time.sleep(0.5)
+                        time.sleep(0.4)
+                        alert = self.wait_alert()
+                        self.accept_alert(alert); time.sleep(0.5)
+                        alert = self.wait_alert()
+                        self.accept_alert(alert); time.sleep(0.5)
 
                         self.switch_windows(2)
                         self.result_list.append(classify_no)
-                        t = '류, '.join(self.result_list) + '류' if len(test) > 0 else ''
+                        t = '류, '.join(self.result_list) + '류' if len(self.result_list) > 0 else ''
                         Slack.chat('서식', f'{markinfo_acc_no} {t} 완료!')
                         Slack.chat('서식상세', f'└         메일 & 알림톡 전송 (끝)')
                     else:
                         self.result_list.append(classify_no)
             return True
         except Exception as e:
-            Slack.chat('서식', f'{markinfo_acc_no} {classify_no}류 에러!')
+            Slack.chat('서식', f'{markinfo_acc_no} {classify_no}류 에러!\n{e}')
             print(f'출원번호 입력 과정에서 에러\n{e}')
             return False
 

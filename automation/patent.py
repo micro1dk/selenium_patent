@@ -114,7 +114,7 @@ class Patent(Browser, PyautoGUI):
             return 
 
         complete_list = [t.strip('\n') for t in text_list[1:]]
-        applicant_name = text_list[0]
+        applicant_name = text_list[0].strip('\n')
 
         for complete in complete_list:
             accept_no, application_no, classify_no = complete.split(',')
@@ -170,7 +170,6 @@ class Patent(Browser, PyautoGUI):
                                 applicant_name_patent = match.group(1)
                                 print(applicant_name_patent, '특허청 기록된 이름')
                                 if applicant_name != applicant_name_patent:
-                                    print('틀려')
                                     Slack.chat('서식비고', f'{markinfo_acc_no} {classify_no}류 \n마크인포상세페이지 출원인 이름: {applicant_name}\n특허청 출원인 이름: {applicant_name_patent}')
                             else:
                                 print('reg not matched')

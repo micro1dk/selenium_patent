@@ -78,8 +78,11 @@ class Keaps(PyautoGUI):
                                 classify += c
                         time.sleep(0.5)
                         self.classify = classify
-                        self.start_one(f'{FOLDER_DIR}\\{f}',
-                                       f'{FOLDER_DIR}\\{f}\\{d}', classify)
+                        success = self.start_one(f'{FOLDER_DIR}\\{f}',
+                                                    f'{FOLDER_DIR}\\{f}\\{d}', classify)
+                        if not success:
+                            
+                            break
         except Exception as e:
             Slack.chat('서식상세', '-------------------')
             print(f'서식작성기과정에서 에러\n{e}')
@@ -313,6 +316,7 @@ class Keaps(PyautoGUI):
                 self.pyper_copy(f'{PATENT_HISTORY_PATH}\\bib_{classify}.zip')
                 self.hot_key('ctrl', 'v')
                 self.press_key(['enter'])
+                time.sleep(1)
                 self.click_image(f'{self.IMAGE_PATH}\\final_submit_search_submit.PNG',
                                 'wait element visible 에러: 온라인제출 > 최종제출 버튼 에러',  0.4, 8, True)
                 # # 예 버튼 최종제출
@@ -359,11 +363,13 @@ class Keaps(PyautoGUI):
                     raise Exception(f'3번 연속 실패')
             self.success += 1
             self.kill_application()
+            return True
         except Exception as e:
             Slack.chat('서식상세', f'└        {classify}류에서 에러\n{e}')
             self.kill_application()
             self.fail += 1
-            raise Exception(f'{application_path} {classify}류에서 에러\n{e}')
+            return False
+            # raise Exception(f'{application_path} {classify}류에서 에러\n{e}')
 
 
 def main():

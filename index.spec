@@ -1,10 +1,11 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+
 block_cipher = None
 
 
 a = Analysis(['index.py'],
-             pathex=['C:\\Users\\MKINFO22\\Desktop\\seosik_2'],
+             pathex=['C:\\Users\\user\\Desktop\\auto\\selenium_patent'],
              binaries=[],
              datas=[],
              hiddenimports=[],
