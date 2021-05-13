@@ -46,6 +46,10 @@ class GetFiles(Browser, PyautoGUI):
             for mode in range(1, 3):
                 i = 3
                 print(wait_list)
+                # 끝나면 초기화
+                if mode == 2:
+                    self.driver.find_element_by_xpath('//*[@id="search"]').click()
+
                 while True:
                     if i > 3:
                         self.driver.find_element_by_xpath(
@@ -83,11 +87,10 @@ class GetFiles(Browser, PyautoGUI):
                                 Slack.chat('서식상세', f'1. {number} {link.text} 진행중...')
                                 link.click()
                                 self.wait_new_window(2, 0.3, 2.1)
-                                self.driver.switch_to.window(
-                                    self.driver.window_handles[1])
+                                self.switch_windows(2)
                                 success, err = self.detail_page()  # 상세페이지에서 자료 다운
-                                self.driver.switch_to.window(
-                                    self.driver.window_handles[0])
+                                self.switch_windows(1)
+
                                 if success:
                                     self.success += 1
                                 else:
@@ -97,7 +100,7 @@ class GetFiles(Browser, PyautoGUI):
 
 
                     if i == 12: # 다음버튼인듯
-                        success, attr = check_attribute(
+                        success, attr = self.check_attribute(
                             self.driver, f'//*[@id="form"]/div[4]/div/div/ul/li[{i + 1}]/a', 'disabled')
                         if success:
                             if attr != 'disabled':
@@ -113,7 +116,6 @@ class GetFiles(Browser, PyautoGUI):
                     if i == page_count + 2:
                         break
                     i += 1
-
 
         except Exception as e:
             print(f'매니저 전체 클릭 후 검색에서 에러\n{e}')
@@ -131,7 +133,7 @@ class GetFiles(Browser, PyautoGUI):
             for i in range(len(bib_btns)):
                 btn = bib_btns[i]
                 classify = bib_classifies[i].get_attribute('value')
-                if classify not in self.pass_list:
+                if classify + '류' not in self.pass_list:
                     Slack.chat('서식상세', f'　└        BIB_{classify}.BIB 다운로드')
                     btn.click()
                     success_download = self.wait_download(f'BIB_{classify}.BIB')

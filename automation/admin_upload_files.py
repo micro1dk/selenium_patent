@@ -210,9 +210,15 @@ class UploadFiles(Browser, PyautoGUI):
                     upload_btns[i].click()
                     alert = self.wait_alert()
                     self.accept_alert(alert)
+                    self.click('xpath', '/html/body/div[8]/div[7]/button[2]')
+                    time.sleep(1)
+                    
+                    # 업로드확인누를것
+                    # time.sleep(1)
 
                     # 메일 보내기: 마지막 항목인 경우 보냄
                     if complete:
+                        self.driver.refresh()
                         print('현재가 마지막 파일..')
                         # 폴더 복사
                         if not os.path.isdir(TARGET_MONTH):
@@ -246,9 +252,11 @@ class UploadFiles(Browser, PyautoGUI):
                         Slack.chat('서식상세', f'└         메일 & 알림톡 전송 (끝)')
                     else:
                         self.result_list.append(classify_no)
+                    self.success += 1
             return True
         except Exception as e:
             Slack.chat('서식', f'{markinfo_acc_no} {classify_no}류 에러!\n{e}')
+            self.fail += 1
             print(f'출원번호 입력 과정에서 에러\n{e}')
             return False
 

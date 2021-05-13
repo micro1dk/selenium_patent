@@ -230,8 +230,8 @@ class Keaps(PyautoGUI):
                     f'{self.IMAGE_PATH}\\viewer_this.PNG',
                     'wait element visible 에러: viewer_this.PNG와 일치하는 이미지가 없음 (서지사항)', 0.5, 3, True
                 )
-                self.hot_key('ctrl', 'p')
                 if cnt == 0:  # 첫 실패 후 두 번째부터는 저장할 필요가 없음
+                    self.hot_key('ctrl', 'p')
                     # 프린터 선택하기
                     self.click_image(
                         f'{self.IMAGE_PATH}\\viewer_print_select.PNG',

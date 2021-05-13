@@ -1,6 +1,6 @@
 import requests
 
-TOKEN = "xoxb-2001561769222-2046544931922-zRCKMzyK3vUf904xm4pkhWI6"
+TOKEN = "xoxb-2001561769222-2046544931922-cXYnfl5TVPvTvmoWLHeqZzCq"
 
 class Slack:
     @staticmethod

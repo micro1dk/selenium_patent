@@ -99,22 +99,28 @@ class Patent(Browser, PyautoGUI):
                     self.folder_fail += 1
                     continue
                 
-                self.script_patent(f'{FOLDER_DIR}\\{f}', f)
+                self.script_patent(f'{FOLDER_DIR}\\{f}', f, pdfs)
         except Exception as e:
             Slack.chat('서식상세', '-------------------')
             print(f'폴더 방문 중 에러발생\n{e}')
             raise Exception(e)
 
-    def script_patent(self, today_dir, markinfo_acc_no):
+    def script_patent(self, today_dir, markinfo_acc_no, length):
         txt_file = open(f'{today_dir}\\_codes.txt', 'r', encoding='utf-8')
         text_list = txt_file.readlines()
         
         # 반드시 2줄 이상이어야함
         if len(text_list) <= 1:
-            return 
+            Slack.chat('서식상세', f'└        _codes.txt file 에러! : {text_list}')
+            return
+        
 
         complete_list = [t.strip('\n') for t in text_list[1:]]
         applicant_name = text_list[0].strip('\n')
+
+        if len(complete_list) != length:
+            Slack.chat('서식상세', f'└        _codes.txt file 에러! : pdf 개수는 {length}개인데, 출원번호 발급된 개수는 {len(complete_list)}')
+            return
 
         for complete in complete_list:
             accept_no, application_no, classify_no = complete.split(',')
