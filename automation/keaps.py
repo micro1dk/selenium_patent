@@ -78,8 +78,8 @@ class Keaps(PyautoGUI):
                                 classify += c
                         time.sleep(0.5)
                         self.classify = classify
-                        success = self.start_one(f'{FOLDER_DIR}\\{f}',
-                                                    f'{FOLDER_DIR}\\{f}\\{d}', classify)
+                        success = self.start_one(f'{f}',
+                                                    f'{f}\\{d}', classify)
                         if not success:
                             
                             break
@@ -99,10 +99,12 @@ class Keaps(PyautoGUI):
         print('extract 결과: ', ret)
         return ret
 
-    def start_one(self, folder_path, application_path, classify):
+    def start_one(self, folder, application, classify):
         # print('===================')
         # print(classify, ' and ', folder_path)
         # print('===================')
+        folder_path = f'{FOLDER_DIR}\\{folder}'
+        application_path = f'{FOLDER_DIR}\\{application}'
         try:
             # 파일 실행 - 폴더별 순회 bib실행, 현재는 bib 하나일때만
             Slack.chat('서식상세', f'└        BIB_{classify}.BIB 실행')
@@ -112,11 +114,20 @@ class Keaps(PyautoGUI):
             self.wait_image_visible(f'{self.IMAGE_PATH}\\start_1.PNG', 1.5, 20)
             time.sleep(1)
 
+            # self.wait_image_visible(f'{self.IMAGE_PATH}\\')
+
             # 아래로 버튼
             e_cnt = 0
             while True:
                 # self.click_position(x=1897, y=986, interval=0.7, clicks=4)
                 self.click_position(x=1897, y=986)
+
+                ss, ee = self.wait_image_visible(
+                    f'{self.IMAGE_PATH}\\start_alarm.PNG', 0.1, 0.1
+                )
+                if ss:
+                    Slack.chat('서식비고', f'{folder} {classify}류 고시되지 않음 또는 다른 알림')
+                    raise Exception('고시되지않은 명칭 또는 다른 알림')
 
                 s, e = self.wait_image_visible(
                     f'{self.IMAGE_PATH}\\search_jpg.PNG', 0.2, 0.4)
@@ -136,7 +147,8 @@ class Keaps(PyautoGUI):
             # 첨부서류 정보 창에서 기타첨부서류로 이동
             time.sleep(1)
             self.press_key(['down'] * 18)
-
+            # return
+            
             # 첨부서류 정보에서 찾기버튼 클릭 -> 윈도우 open 다이얼로그 창
             self.click_image(
                 f'{self.IMAGE_PATH}\\attachment_search.PNG',
@@ -366,6 +378,7 @@ class Keaps(PyautoGUI):
             return True
         except Exception as e:
             Slack.chat('서식상세', f'└        {classify}류에서 에러\n{e}')
+            Slack.chat('서식', f'{folder} {classify}류 서식작성기에서 출원번호발급 실패')
             self.kill_application()
             self.fail += 1
             return False

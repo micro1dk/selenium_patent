@@ -58,14 +58,17 @@ class GetFiles(Browser, PyautoGUI):
                     # 시작하기
                     tbody = self.driver.find_element_by_xpath(
                         '//*[@id="table-view"]/tbody')
-                    tr_list = tbody.find_elements_by_class_name('template')                    
+                    tr_list     = tbody.find_elements_by_class_name('template')                    
                     for tr in tr_list:
                         state_1 = tr.find_element_by_xpath('td[6]').text
                         state_2 = tr.find_element_by_xpath('td[7]/div/div/a').text
+                        state_3 = tr.find_element_by_xpath('td[3]/div/div[3]').text
                         number = tr.find_element_by_xpath('td[5]/div[1]').text
                         link = tr.find_element_by_xpath('td[5]/div[3]/span/a')
-                        # if state_1 == '최종제출동의' and state_2 == '처리대기' and number not in stack:
-                        
+   
+                        if state_3 != '(금일 4시 이전)':
+                            continue
+
                         if mode == 1: 
                             if state_1 == '최종제출동의':
                                 if number not in remove_list:
@@ -96,9 +99,6 @@ class GetFiles(Browser, PyautoGUI):
                                 else:
                                     self.fail += 1
 
-                                
-
-
                     if i == 12: # 다음버튼인듯
                         success, attr = self.check_attribute(
                             self.driver, f'//*[@id="form"]/div[4]/div/div/ul/li[{i + 1}]/a', 'disabled')
@@ -124,16 +124,20 @@ class GetFiles(Browser, PyautoGUI):
     def download_bib(self):
         try:
             self.click('xpath', '/html/body/div[2]/div/div[3]/div/div[2]/div[2]/ul[1]/li[4]/a'); time.sleep(0.2)
-            bib_btns = self.driver.find_elements_by_class_name('bib_btn')
-            bib_classifies = self.driver.find_elements_by_class_name(
-                'classify_bib')
-            if len(bib_btns) != len(bib_classifies):
-                raise Exception('bib 버튼이 없는게 있음')
+            # bib_btns = self.driver.find_elements_by_class_name('bib_btn')
+            # bib_classifies = self.driver.find_elements_by_class_name(
+            #     'classify_bib')
+            
+            table_container = self.driver.find_element_by_xpath('//*[@id="tab-4"]/div[2]')
+            table_list = table_container.find_elements_by_tag_name('table')
 
-            for i in range(len(bib_btns)):
-                btn = bib_btns[i]
-                classify = bib_classifies[i].get_attribute('value')
+            success_download = False
+            for i in range(1, len(table_list) - 1):
+                table = table_list[i]
+                classify = table.find_element_by_class_name('classify_bib').get_attribute('value')
+                # classify = bib_classifies[i].get_attribute('value')
                 if classify + '류' not in self.pass_list:
+                    btn = table.find_element_by_class_name('bib_btn')
                     Slack.chat('서식상세', f'　└        BIB_{classify}.BIB 다운로드')
                     btn.click()
                     success_download = self.wait_download(f'BIB_{classify}.BIB')

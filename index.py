@@ -11,11 +11,11 @@ def main():
 
         admin_login.main(browser.driver) # 관리자 페이지 로그인
 
-        # admin_get_files.main(browser.driver) # 상세페이지에서 자료모으기
+        admin_get_files.main(browser.driver) # 상세페이지에서 자료모으기
 
-        # keaps.main() # 서식작성기
+        keaps.main() # 서식작성기
 
-        # patent.main(browser.driver) # 특허로
+        patent.main(browser.driver) # 특허로
 
         admin_upload_files.main(browser.driver) # 자료 업로드
 

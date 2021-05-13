@@ -25,6 +25,12 @@ class Patent(Browser, PyautoGUI):
                 shutil.move(f'{DOWNLOAD_PATH}\\{d}',
                             f'{DOWNLOAD_PATH}\\{filename}\\{d}')
     
+    def loop_login(self):
+        while True:
+            success = self.login_patent()
+            if success:
+                break
+
     def login_patent(self):
         try:
             # self.visit('www.naver.com')
@@ -67,9 +73,11 @@ class Patent(Browser, PyautoGUI):
 
             self.select_element('xpath', '//*[@id="recordCountPerPage"]', '20')
             self.press_key(['tab', 'enter'])
+            return True
         except Exception as e:
             Slack.chat('서식상세', '특허청 로그인에러')
             print('특허로 로그인 에러발생: ', e)
+            return False
 
     def visit_folder(self):
         # 폴더방문
@@ -263,7 +271,7 @@ def main(driver):
         Slack.chat('서식상세', '=====================< 특허로 시작 >=====================')
         Slack.chat('서식', '특허로 작업 시작 (2-분류번호.pdf 저장)')
         patent_page = Patent(driver)
-        patent_page.login_patent()
+        patent_page.loop_login()
         patent_page.visit_folder()
         total = patent_page.success + patent_page.fail
         Slack.chat('서식', 

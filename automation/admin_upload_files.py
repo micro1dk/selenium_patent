@@ -129,15 +129,19 @@ class UploadFiles(Browser, PyautoGUI):
                     self.driver.find_element_by_xpath(f'//*[@id="table-view"]/tbody/tr[{j}]/td[5]/div[3]/span/a').click()
                     self.switch_windows(2)
                     success = self.detail_page(accept_no, application_no, classify_no, markinfo_acc_no, complete)
-                    self.driver.close()
+                    print('페이지 닫기 성공여부: ', success)
+                    # self.driver.close()
 
                     self.switch_windows(1)
                     time.sleep(1)
                     # print('ok 상세페이지 업로드 성공?', success)
 
                     if success:
+                        print('처리대기 전')
                         self.click('xpath', f'//*[@id="table-view"]/tbody/tr[{j}]/td[7]/div/div/a') # 처리대기 클릭
+                        print('처리대기 누름, 처리완료 누르기 전')
                         self.click('xpath', f'//*[@id="table-view"]/tbody/tr[{j}]/td[7]/div/div/ul/li[4]/a') # 처리완료 클릭
+                        print('처리대기 처리완료 누름')
                         Slack.chat('서식상세', f'└        상태값 처리완료로')
                     self.click(
                         'xpath', f'//*[@id="table-view"]/tbody/tr[{j}]/td[7]/div/div/a')
@@ -212,13 +216,13 @@ class UploadFiles(Browser, PyautoGUI):
                     self.accept_alert(alert)
                     self.click('xpath', '/html/body/div[8]/div[7]/button[2]')
                     time.sleep(1)
-                    
-                    # 업로드확인누를것
-                    # time.sleep(1)
+                    print('리프레시중')
+                    self.driver.refresh()
+                    print('리프레시완료')
+                    time.sleep(1)
 
                     # 메일 보내기: 마지막 항목인 경우 보냄
                     if complete:
-                        self.driver.refresh()
                         print('현재가 마지막 파일..')
                         # 폴더 복사
                         if not os.path.isdir(TARGET_MONTH):
@@ -251,7 +255,13 @@ class UploadFiles(Browser, PyautoGUI):
                         Slack.chat('서식', f'{markinfo_acc_no} {t} 완료!')
                         Slack.chat('서식상세', f'└         메일 & 알림톡 전송 (끝)')
                     else:
+                        print('switch 전')
+                        self.switch_windows(2)
+                        print('switch 후')
                         self.result_list.append(classify_no)
+                    print('한페이지 종료')
+                    self.driver.close()
+                    print('페이지 닫기')
                     self.success += 1
             return True
         except Exception as e:
