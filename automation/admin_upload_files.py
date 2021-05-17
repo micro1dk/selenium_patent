@@ -126,11 +126,10 @@ class UploadFiles(Browser, PyautoGUI):
                 if '최종제출동의' == reply_elem.text and '처리대기' in state_elem.text and markinfo_acc_no in title_elem.text and f'({classify_no}류)' in title_elem.text:
                     # print('발견!!!=====================')
                     time.sleep(2)
-                    self.driver.find_element_by_xpath(f'//*[@id="table-view"]/tbody/tr[{j}]/td[5]/div[3]/span/a').click()
+                    self.click('xpath', f'//*[@id="table-view"]/tbody/tr[{j}]/td[5]/div[3]/span/a')
                     self.switch_windows(2)
                     success = self.detail_page(accept_no, application_no, classify_no, markinfo_acc_no, complete)
                     print('페이지 닫기 성공여부: ', success)
-                    # self.driver.close()
 
                     self.switch_windows(1)
                     time.sleep(1)
@@ -143,8 +142,7 @@ class UploadFiles(Browser, PyautoGUI):
                         self.click('xpath', f'//*[@id="table-view"]/tbody/tr[{j}]/td[7]/div/div/ul/li[4]/a') # 처리완료 클릭
                         print('처리대기 처리완료 누름')
                         Slack.chat('서식상세', f'└        상태값 처리완료로')
-                    self.click(
-                        'xpath', f'//*[@id="table-view"]/tbody/tr[{j}]/td[7]/div/div/a')
+
                     time.sleep(3)
                     if i > 3:
                         self.driver.find_element_by_xpath(
@@ -263,7 +261,8 @@ class UploadFiles(Browser, PyautoGUI):
                     self.driver.close()
                     print('페이지 닫기')
                     self.success += 1
-            return True
+                    return True
+            return False
         except Exception as e:
             Slack.chat('서식', f'{markinfo_acc_no} {classify_no}류 에러!\n{e}')
             self.fail += 1
