@@ -142,7 +142,7 @@ class GetFiles(Browser, PyautoGUI):
                     btn.click()
                     success_download = self.wait_download(f'BIB_{classify}.BIB')
                     time.sleep(1.3)
-                    # break
+                    break
             if not success_download:
                 raise Exception('bib 다운로드 실패함')
         except Exception as e:
@@ -302,6 +302,19 @@ class GetFiles(Browser, PyautoGUI):
             table_container = self.driver.find_element_by_xpath(
                 '//*[@id="tab-4"]/div[2]')
             tables = table_container.find_elements_by_tag_name('table')
+
+            Slack.chat('서식상세', '　└        분류검증')
+            temp_list = []
+            table_container = self.driver.find_element_by_xpath('//*[@id="tab-4"]/div[2]')
+            table_list = table_container.find_elements_by_tag_name('table')
+            for i in range(1, len(table_list) - 1):
+                table = table_list[i]
+                classify = table.find_element_by_class_name('classify_bib').get_attribute('value')
+                if classify not in temp_list:
+                    temp_list.append(classify)
+                else:
+                    return False, ''
+            # 위 까지 분류검증
 
             # if len(tables) == 3:
             # 이미지 다운로드
