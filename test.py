@@ -167,8 +167,22 @@ from paths import *
 
 # print(pass_list)
 
-test = ['22', '11']
-tt = '류' if len(test) > 0 else ''
-t = '류, '.join(test) + '류' if len(test) > 0 else ''
+# test = ['22', '11']
+# tt = '류' if len(test) > 0 else ''
+# t = '류, '.join(test) + '류' if len(test) > 0 else ''
 
-print(t)
+# print(t)
+
+import requests
+
+TOKEN = "xoxb-2001561769222-2046544931922-v3CQDFNNwxe1TTr77c6cXTF0"
+
+class Slack:
+    @staticmethod
+    def chat(channel, message):
+        response = requests.post("https://slack.com/api/chat.postMessage",
+            headers={"Authorization": "Bearer "+ TOKEN},
+            data={"channel": channel,"text": message}
+        )
+ 
+Slack.chat('#서식', 'test')

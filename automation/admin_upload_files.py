@@ -229,7 +229,8 @@ class UploadFiles(Browser, PyautoGUI):
                         if not os.path.isdir(TARGET_DAY):
                             os.mkdir(TARGET_DAY)
 
-                        shutil.copytree(f'{FOLDER_DIR}\\{markinfo_acc_no}', f'{TARGET_DAY}\\{markinfo_acc_no}')
+                        shutil.move(f'{FOLDER_DIR}\\{markinfo_acc_no}', f'{TARGET_DAY}\\{markinfo_acc_no}')
+
 
                         time.sleep(1)
                         elnt = self.driver.find_element_by_xpath('//*[@id="result_report"]/span')
