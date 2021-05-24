@@ -20,6 +20,9 @@ class Keaps(PyautoGUI):
             if f.endswith('.zip'):
                 os.remove(f'{PATENT_HISTORY_PATH}\\{f}')
 
+        if os.path.isfile(f'{PATENT_ATT_PATH}\\warrant.att'):
+            os.remove(f'{PATENT_ATT_PATH}\\warrant.att')
+
         os.system('taskkill /IM nkeaps* /F /T')
         time.sleep(1)
         os.startfile(application_path)
@@ -81,7 +84,6 @@ class Keaps(PyautoGUI):
                         success = self.start_one(f'{f}',
                                                     f'{f}\\{d}', classify)
                         if not success:
-                            
                             break
         except Exception as e:
             Slack.chat('서식상세', '-------------------')

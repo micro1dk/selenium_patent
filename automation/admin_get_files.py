@@ -75,7 +75,7 @@ class GetFiles(Browser, PyautoGUI):
                                     if number not in wait_list:
                                         wait_list.append(number)
                         
-                            elif state_1 == '[무료]수정요청': 
+                            elif '수정요청' in state_1: 
                                 if number in wait_list:
                                     wait_list.remove(number)
                                     if number not in remove_list:
@@ -85,6 +85,7 @@ class GetFiles(Browser, PyautoGUI):
                                         remove_list.append(number)
 
                         elif mode == 2:
+                            print(wait_list, '대기리스트')
                             if number in wait_list and number not in complete_list:
                                 complete_list.append(number)
                                 Slack.chat('서식상세', f'1. {number} {link.text} 진행중...')
@@ -98,6 +99,7 @@ class GetFiles(Browser, PyautoGUI):
                                     self.success += 1
                                 else:
                                     self.fail += 1
+                                    Slack.chat('서식', f'{number} bib, logo, 위임장 받는과정에서 에러')
 
                     if i == 12: # 다음버튼인듯
                         success, attr = self.check_attribute(
@@ -142,7 +144,8 @@ class GetFiles(Browser, PyautoGUI):
                     btn.click()
                     success_download = self.wait_download(f'BIB_{classify}.BIB')
                     time.sleep(1.3)
-                    break
+                    # self.pass_list.append(classify)
+
             if not success_download:
                 raise Exception('bib 다운로드 실패함')
         except Exception as e:
@@ -301,7 +304,6 @@ class GetFiles(Browser, PyautoGUI):
             self.wait_element_visible('xpath', '//*[@id="tab-4"]/div[2]', 10)
             table_container = self.driver.find_element_by_xpath(
                 '//*[@id="tab-4"]/div[2]')
-            tables = table_container.find_elements_by_tag_name('table')
 
             Slack.chat('서식상세', '　└        분류검증')
             temp_list = []
@@ -319,6 +321,8 @@ class GetFiles(Browser, PyautoGUI):
             # if len(tables) == 3:
             # 이미지 다운로드
             self.download_image()
+
+            print(self.pass_list, '패스목록')
 
             # 다운로드 시작
             self.download_bib()  # 다운로드 완료를 기다려야 할듯..

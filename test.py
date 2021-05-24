@@ -173,16 +173,22 @@ from paths import *
 
 # print(t)
 
-import requests
+# import requests
 
-TOKEN = "xoxb-2001561769222-2046544931922-v3CQDFNNwxe1TTr77c6cXTF0"
+# TOKEN = "xoxb-2001561769222-2046544931922-cgbq5QHml1M6RDdLPZ6IlSxe"
 
-class Slack:
-    @staticmethod
-    def chat(channel, message):
-        response = requests.post("https://slack.com/api/chat.postMessage",
-            headers={"Authorization": "Bearer "+ TOKEN},
-            data={"channel": channel,"text": message}
-        )
+# class Slack:
+#     @staticmethod
+#     def chat(channel, message):
+#         response = requests.post("https://slack.com/api/chat.postMessage",
+#             headers={"Authorization": "Bearer "+ TOKEN},
+#             data={"channel": channel,"text": message}
+#         )
+#         # print(response.__dict__)
  
-Slack.chat('#서식', 'test')
+# Slack.chat('#서식', 'test')
+
+import os
+
+p = os.path.isfile('./index.py')
+print(p)
