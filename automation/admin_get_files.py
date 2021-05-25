@@ -58,8 +58,9 @@ class GetFiles(Browser, PyautoGUI):
                     # 시작하기
                     tbody = self.driver.find_element_by_xpath(
                         '//*[@id="table-view"]/tbody')
-                    tr_list     = tbody.find_elements_by_class_name('template')                    
-                    for tr in tr_list:
+                    tr_list  = tbody.find_elements_by_class_name('template')                    
+                    for j in range(len(tr_list) - 1, -1, -1):
+                        tr = tr_list[j]
                         state_1 = tr.find_element_by_xpath('td[6]').text
                         state_2 = tr.find_element_by_xpath('td[7]/div/div/a').text
                         state_3 = tr.find_element_by_xpath('td[3]/div/div[3]').text
@@ -85,7 +86,10 @@ class GetFiles(Browser, PyautoGUI):
                                         remove_list.append(number)
 
                         elif mode == 2:
-                            print(wait_list, '대기리스트')
+                            # print(wait_list, '대기리스트')
+                            if os.path.isdir(FOLDER_DIR) and len(os.listdir(FOLDER_DIR)) > 15:
+                                Slack.chat('서식상세', '최대 15개 까지')
+                                return
                             if number in wait_list and number not in complete_list:
                                 complete_list.append(number)
                                 Slack.chat('서식상세', f'1. {number} {link.text} 진행중...')
@@ -305,18 +309,27 @@ class GetFiles(Browser, PyautoGUI):
             table_container = self.driver.find_element_by_xpath(
                 '//*[@id="tab-4"]/div[2]')
 
-            Slack.chat('서식상세', '　└        분류검증')
+            Slack.chat('서식상세', '　└        분류검증, 출원유형 확인')
             temp_list = []
             table_container = self.driver.find_element_by_xpath('//*[@id="tab-4"]/div[2]')
             table_list = table_container.find_elements_by_tag_name('table')
             for i in range(1, len(table_list) - 1):
                 table = table_list[i]
                 classify = table.find_element_by_class_name('classify_bib').get_attribute('value')
+                print(temp_list, classify)
                 if classify not in temp_list:
                     temp_list.append(classify)
                 else:
+                    Slack.chat('서식상세', '　└        같은 분류 여러개가 있음')
+                    self.driver.close()
                     return False, ''
             # 위 까지 분류검증
+            self.click('xpath', '/html/body/div[2]/div/div[3]/div/div[2]/div[2]/ul[1]/li[2]/a')
+            a_type = self.driver.find_element_by_xpath('//*[@id="tab-2"]/div/table[1]/tbody/tr[1]/td[1]').text
+            if a_type == '외국법인':
+                Slack.chat('서식상세', '　└        외국법인')
+                return False, ''
+            print(a_type, '출원유형')
 
             # if len(tables) == 3:
             # 이미지 다운로드

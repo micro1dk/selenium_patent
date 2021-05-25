@@ -2,6 +2,7 @@ import time
 import pyautogui
 import pyperclip
 
+pyautogui.FAILSAFE = False
 
 class PyautoGUI:
     def __init__(self):
@@ -85,8 +86,8 @@ class PyautoGUI:
             pyautogui.moveTo(element)
             return True
 
-        if raise_error:
-            raise Exception(err_msg)
+        # if raise_error:
+        #     raise Exception(err_msg)
         return False
 
     def hot_key(self, a, b):

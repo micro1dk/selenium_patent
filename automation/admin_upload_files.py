@@ -52,6 +52,8 @@ class UploadFiles(Browser, PyautoGUI):
                 Slack.chat('서식상세', f'4. {f} 폴더 진행 (관리자페이지 파일업로드)')
                 if len(os.listdir(f'{FOLDER_DIR}\\{f}')) == 0:
                     Slack.chat('서식상세', f'└        {f}는 빈 폴더')
+                    Slack.chat('서식', f'{f} 폴더는 빈 폴더')
+
                     self.folder_fail += 1
                     continue
 
@@ -64,6 +66,7 @@ class UploadFiles(Browser, PyautoGUI):
 
                 if pdfs_1 != pdfs_2:
                     Slack.chat('서식상세', f'└        1-.pdf, 2-.pdf 개수 매치가 안됨')
+                    Slack.chat('서식', f'{f} 폴더 - 1.pdf, 2.pdf 개수 매치가 안됨')
                     self.folder_fail += 1
                     continue
 
@@ -71,6 +74,7 @@ class UploadFiles(Browser, PyautoGUI):
                 complete_length = len(complete_list)
                 if not complete_list:
                     Slack.chat('서식상세', f'└        _codes.txt가 없거나 빈 파일')
+                    Slack.chat('서식', f'{f} 폴더 - _codes.txt가 없거나 비어있음')
                     self.folder_fail += 1
                     continue
                 
@@ -166,6 +170,8 @@ class UploadFiles(Browser, PyautoGUI):
             if i == page_count + 2:
                 break
             i += 1
+        Slack.chat('서식', f'{markinfo_acc_no} 항목을 찾지못함')
+        self.fail += 1
         # self.driver.find_element_by_xpath('//*[@id="search"]').click()
     
     def detail_page(self, accept_no, application_no, classify_no, markinfo_acc_no, complete):
