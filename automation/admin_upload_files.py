@@ -77,7 +77,7 @@ class UploadFiles(Browser, PyautoGUI):
                     Slack.chat('서식', f'{f} 폴더 - _codes.txt가 없거나 비어있음')
                     self.folder_fail += 1
                     continue
-                
+            
                 complete_cnt = 0
                 complete = False
                 for com in complete_list:
