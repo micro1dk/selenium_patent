@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import time
 import shutil
@@ -17,6 +18,7 @@ class UploadFiles(Browser, PyautoGUI):
         self.complete_list = []
         self.folder_fail = 0
         self.result_list = [] # slack 결과안내
+        self.work_list = []
     
     def open_codes(self, f):
         try:
@@ -57,18 +59,15 @@ class UploadFiles(Browser, PyautoGUI):
                     self.folder_fail += 1
                     continue
 
-                pdfs_1, pdfs_2 = 0, 0
+                
+                # pdfs_1, pdfs_2 = 0, 0
+                self.work_list = []
                 for d in os.listdir(f'{FOLDER_DIR}\\{f}'):
                     if d.startswith('1-'):
-                        pdfs_1 += 1
-                    elif d.startswith('2-'):
-                        pdfs_2 += 1
-
-                if pdfs_1 != pdfs_2:
-                    Slack.chat('서식상세', f'└        1-.pdf, 2-.pdf 개수 매치가 안됨')
-                    Slack.chat('서식', f'{f} 폴더 - 1.pdf, 2.pdf 개수 매치가 안됨')
-                    self.folder_fail += 1
-                    continue
+                        classify_1 = re.search('\d-(\d+)', d)[1]
+                        if '2-' + classify_1 + '.pdf' in os.listdir(f'{FOLDER_DIR}\\{f}'):
+                            self.work_list.append(classify_1)
+                Slack.chat('서식상세', f'└        진행리스트 : {self.work_list}류')
 
                 complete_list = self.open_codes(f)
                 complete_length = len(complete_list)
@@ -83,7 +82,7 @@ class UploadFiles(Browser, PyautoGUI):
                 for com in complete_list:
                     accept_no, application_no, classify_no = com.split(',')
                     # print('page_search _before')
-                    Slack.chat('서식상세', f'admin 페이지 {f} {classify_no}류 시작')
+                    Slack.chat('서식상세', f'*        {classify_no}류 시작')
                     # 한줄마다 페이지 전체를 순회하여 검색
                     if complete_cnt == complete_length - 1:
                         complete = True # 마지막 항목일 때 True
@@ -183,14 +182,21 @@ class UploadFiles(Browser, PyautoGUI):
             edit_btns = self.driver.find_elements_by_class_name(
                 'application_edit')
             
+            
             for i in range(len(bib_classifies)):
                 """
                 분류번호가 맞는 것
                 """
                 # print(bib_classifies[i].text, classify_no, application_no)
-                if bib_classifies[i].get_attribute('value') == classify_no:
+                cv = bib_classifies[i].get_attribute('value')
+                if cv == classify_no and cv in self.work_list:
+
                     Slack.chat('서식상세', f'└        {classify_no}류에 출원번호는 {application_no}')
+                    if number_inputs[i].get_attribute('value'):
+                        Slack.chat('서식상세', f'└        {classify_no}류에 출원번호에는 이미 코드가 들어가있네요')
+                        return True
                     number_inputs[i].send_keys(application_no)
+                    
                     time.sleep(1)
                     self.write_key(application_no)
                     Slack.chat('서식상세', f'└         1-{classify_no}.pdf, 2-{classify_no}.pdf 업로드')
@@ -235,30 +241,38 @@ class UploadFiles(Browser, PyautoGUI):
                         if not os.path.isdir(TARGET_DAY):
                             os.mkdir(TARGET_DAY)
 
-                        shutil.move(f'{FOLDER_DIR}\\{markinfo_acc_no}', f'{TARGET_DAY}\\{markinfo_acc_no}')
-
-
                         time.sleep(1)
-                        elnt = self.driver.find_element_by_xpath('//*[@id="result_report"]/span')
- 
-                        if '출원컨펌요청' in elnt.text:
-                            raise Exception('출원컨펌요청이네요')
-                        elnt.click()
-                        
-                        self.wait_new_window(3, 0.5)
-                        self.switch_windows(3)
-                        self.click('xpath', '/html/body/div[1]/div[2]/div[1]/div/button[1]')
-                        time.sleep(0.4)
-                        alert = self.wait_alert()
-                        self.accept_alert(alert); time.sleep(0.5)
-                        alert = self.wait_alert()
-                        self.accept_alert(alert); time.sleep(0.5)
+                        ff = open(f'{FOLDER_DIR}\\{markinfo_acc_no}\\_codes.txt', 'r', encoding='utf-8')
+                        fr = ff.readlines()[0].strip('\n').split(',')[-1]
 
-                        self.switch_windows(2)
+                        if fr == 'T':
+                            elnt = self.driver.find_element_by_xpath('//*[@id="result_report"]/span')
+    
+                            if '출원컨펌요청' in elnt.text:
+                                raise Exception('출원컨펌요청이네요')
+                            elnt.click()
+                            
+                            self.wait_new_window(3, 0.5)
+                            self.switch_windows(3)
+                            self.click('xpath', '/html/body/div[1]/div[2]/div[1]/div/button[1]')
+                            time.sleep(0.4)
+                            alert = self.wait_alert()
+                            self.accept_alert(alert); time.sleep(0.5)
+                            alert = self.wait_alert()
+                            self.accept_alert(alert); time.sleep(0.5)
+
+                            self.switch_windows(2)
+
+                            Slack.chat('서식상세', f'└         메일&톡 전송 (끝, 마지막 번호였음)')
+                        else:
+                            Slack.chat('서식상세', f'└         메일&톡 안보냄 (출원안된것이 있거나 우심있거나) (끝, 마지막 번호)')
+                        ff.close()
+                        # 공유폴더로 이동
+                        shutil.move(f'{FOLDER_DIR}\\{markinfo_acc_no}', f'{TARGET_DAY}\\{markinfo_acc_no}')
                         self.result_list.append(classify_no)
                         t = '류, '.join(self.result_list) + '류' if len(self.result_list) > 0 else ''
                         Slack.chat('서식', f'{markinfo_acc_no} {t} 완료!')
-                        Slack.chat('서식상세', f'└         메일 & 알림톡 전송 (끝)')
+                        
                     else:
                         print('switch 전')
                         self.switch_windows(2)
@@ -272,6 +286,7 @@ class UploadFiles(Browser, PyautoGUI):
             return False
         except Exception as e:
             Slack.chat('서식', f'{markinfo_acc_no} {classify_no}류 에러!\n{e}')
+            self.work_list = []
             self.fail += 1
             print(f'출원번호 입력 과정에서 에러\n{e}')
             return False

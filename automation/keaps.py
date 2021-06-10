@@ -71,7 +71,30 @@ class Keaps(PyautoGUI):
                     Slack.chat('서식상세', f'└        위임장pdf가 없음')
                     self.folder_fail += 1
                     continue
-                print('성공')
+                
+                # codes.txt 검사
+                cnt_bib = 0
+
+                ff = open(f'{FOLDER_DIR}\\{f}\\_codes.txt', 'r+', encoding='utf-8')
+                lines = ff.readlines()
+                lss = lines[0].strip('\n').split(',')
+                if len(lss) < 2:
+                    Slack.chat('서식상세', f'└        _codes.txt 첫줄 에러')
+                    continue
+                tl, tr = lss
+
+                if tr == 'T':
+                    Slack.chat('서식상세', f'└        진행하지 않음, 이미 출원한것?')
+                    continue
+
+                pass_list = []
+                if len(lines) > 1:
+                    # 출원발급 시작할건데, 만약 _codes.txt에 출원된 정보가 있다면 그것은 패스해야해
+                    for line in lines[1:]:
+                        classify = line.strip('\n').split(',')[-1]
+                        pass_list.append(classify)
+                        cnt_bib += 1
+                    Slack.chat('서식상세', f'└        _codes.txt에 이미 출원된 정보가 있음 => {pass_list}류')
 
                 for d in os.listdir(f'{FOLDER_DIR}\\{f}'):
                     if d.endswith('.BIB'):
@@ -80,11 +103,25 @@ class Keaps(PyautoGUI):
                             if c.isnumeric():
                                 classify += c
                         time.sleep(0.5)
-                        self.classify = classify
-                        success = self.start_one(f'{f}',
-                                                    f'{f}\\{d}', classify)
-                        if not success:
-                            break
+                        if classify not in pass_list:
+                            print(classify)
+                            self.classify = classify
+                            success = self.start_one(f'{f}',
+                                                        f'{f}\\{d}', classify)
+                            # success = True
+                            if not success:
+                                break
+                            else:
+                                cnt_bib += 1
+
+                # bib 갯수와 cnt_bib(출원성공 갯수)가 일치해야 T가 붙고 그렇지 않으면 F가 붙음
+                ff.seek(0, 0)
+                if tr == 'N':
+                    if cnt_bib == bibs:
+                        ff.write(tl + ',T\n')
+                    else:
+                        ff.write(tl + ',F\n')
+                ff.close()
         except Exception as e:
             Slack.chat('서식상세', '-------------------')
             print(f'서식작성기과정에서 에러\n{e}')
@@ -402,4 +439,4 @@ def main():
                    )
     except Exception as e:
         Slack.chat('서식', f'서식작성기 에러')
-        raise Exception(e)
+        # raise Exception(e)

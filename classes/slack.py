@@ -1,6 +1,12 @@
 import requests
+from dotenv import dotenv_values
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 
-TOKEN = "xoxb-2001561769222-2046544931922-uE7xgKwKjuXdXbdeusOD4U46"
+config = dotenv_values('.env')
+
+TOKEN = config['SLACK']
 
 class Slack:
     @staticmethod

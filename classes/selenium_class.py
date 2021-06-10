@@ -175,26 +175,31 @@ class Browser:
         """
         filename이 다운로드 되기 까지 대기
         """
-        file_list = os.listdir(f'{DOWNLOAD_PATH}\\temp')
-        if len(file_list) > 0:
-            for d in file_list:
-                if d in filename: continue
-                print(f'{DOWNLOAD_PATH}\\temp\\{d} 삭제함..')
-                os.remove(f'{DOWNLOAD_PATH}\\temp\\{d}')
+        # file_list = os.listdir(f'{DOWNLOAD_PATH}\\temp')
+        # if len(file_list) > 0:
+        #     for d in file_list:
+        #         if d in filename: continue
+        #         print(f'{DOWNLOAD_PATH}\\temp\\{d} 삭제함..')
+        #         os.remove(f'{DOWNLOAD_PATH}\\temp\\{d}')
 
         t = 0
         while True:
-            # print(len(os.listdir(f'{DOWNLOAD_PATH}\\temp')))
             if t >= limit:
                 return False
+
+            flag = False
             if len(os.listdir(f'{DOWNLOAD_PATH}\\temp')):
                 flag = True
-                for fname in os.listdir(f'{DOWNLOAD_PATH}\\temp'):
-                    if fname.endswith('.crdownload'):
-                        flag = False
-                if flag:
-                    self.move_file(filename)
-                    return True
+
+            if flag == True:
+                if len(os.listdir(f'{DOWNLOAD_PATH}\\temp')):
+                    flag_2 = True
+                    for fname in os.listdir(f'{DOWNLOAD_PATH}\\temp'):
+                        if fname.endswith('.crdownload'):
+                            flag_2 = False
+                    if flag_2:
+                        self.move_file(filename)
+                        return True
             t += delay
             time.sleep(delay)
 

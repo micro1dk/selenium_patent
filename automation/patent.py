@@ -99,13 +99,13 @@ class Patent(Browser, PyautoGUI):
                 for d in os.listdir(f'{FOLDER_DIR}\\{f}'):
                     if d != 'warrant.pdf' and d.startswith('1-'):
                         pdfs += 1
-                    if d.endswith('.BIB'):
-                        bibs += 1
+                    # if d.endswith('.BIB'):
+                    #     bibs += 1
 
-                if pdfs != bibs:
-                    Slack.chat('서식상세', f'└        pdfs, bib 개수 매치가 안됨')
-                    self.folder_fail += 1
-                    continue
+                # if pdfs != bibs:
+                #     Slack.chat('서식상세', f'└        pdfs, bib 개수 매치가 안됨')
+                #     self.folder_fail += 1
+                #     continue
                 
                 self.script_patent(f'{FOLDER_DIR}\\{f}', f, pdfs)
         except Exception as e:
@@ -114,7 +114,7 @@ class Patent(Browser, PyautoGUI):
             raise Exception(e)
 
     def script_patent(self, today_dir, markinfo_acc_no, length):
-        txt_file = open(f'{today_dir}\\_codes.txt', 'r', encoding='utf-8')
+        txt_file = open(f'{today_dir}\\_codes.txt', 'r+', encoding='utf-8')
         text_list = txt_file.readlines()
         
         # 반드시 2줄 이상이어야함
@@ -124,19 +124,34 @@ class Patent(Browser, PyautoGUI):
         
 
         complete_list = [t.strip('\n') for t in text_list[1:]]
-        applicant_name = text_list[0].strip('\n')
+        applicant_name = text_list[0].strip('\n').split(',')[0]
 
-        if len(complete_list) != length:
-            Slack.chat('서식상세', f'└        _codes.txt file 에러! : pdf 개수는 {length}개인데, 출원번호 발급된 개수는 {len(complete_list)}')
-            return
+        # if len(complete_list) != length:
+        #     Slack.chat('서식상세', f'└        _codes.txt file 에러! : pdf 개수는 {length}개인데, 출원번호 발급된 개수는 {len(complete_list)}')
+        #     return
 
         for complete in complete_list:
             accept_no, application_no, classify_no = complete.split(',')
             Slack.chat('서식상세', f'{accept_no}, {application_no}, {classify_no}류 탐색 시작')
             self.page_search(accept_no, application_no,
                              classify_no, markinfo_acc_no, applicant_name)
-            print('complete!!')
-    
+        
+        # 한 주문번호 폴더가 끝나면 2.pdfs와 1.pdfs bibs 개수 비교한다.
+        p_1, p_2, bibs = 0, 0, 0
+        for dd in os.listdir(f'{today_dir}'):
+            if dd.startswith('2') and dd.endswith('.pdf'):
+                p_2 += 1
+            elif dd.startswith('1') and dd.endswith('.pdf'):
+                p_1 += 1
+            elif dd.endswith('.BIB'):
+                bibs += 1
+        # 일치하지 않으면 첫줄을 F로 바꾼다.
+        if not (p_1 == p_2 == bibs):
+            fl = text_list[0].strip('\n').split(',')[0]
+            txt_file.seek(0, 0)
+            txt_file.write(fl + ',F\n')
+        txt_file.close()
+
     def page_search(self, accept_no, application_no, classify_no, markinfo_acc_no, applicant_name):
         try:
             page, btn_cnt, cnt = 1, 1, 0
