@@ -4,7 +4,9 @@ import os
 import sys
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 
-config = dotenv_values('.env')
+from paths import CURRENT_PATH
+
+config = dotenv_values(f'{CURRENT_PATH}\\.env')
 
 TOKEN = config['SLACK']
 

@@ -56,11 +56,14 @@ class Keaps(PyautoGUI):
 
                 # 파일검사: bib파일, jpg 파일 분류가 매치되어야함, warrant.pdf파일이 있어야함
                 jpgs, bibs, pdf = 0, 0, 0
+                bib_list = []
                 for d in os.listdir(f'{FOLDER_DIR}\\{f}'):
                     if d.endswith('.jpg'):
                         jpgs += 1
                     elif d.endswith('.BIB'):
                         bibs += 1
+                        if len(d) > 6:
+                            bib_list.append(d[4:6])
                     if d == 'warrant.pdf':
                         pdf += 1
                 if jpgs != bibs:
@@ -71,6 +74,7 @@ class Keaps(PyautoGUI):
                     Slack.chat('서식상세', f'└        위임장pdf가 없음')
                     self.folder_fail += 1
                     continue
+                Slack.chat('서식상세', f'└        진행할 분류: {bib_list}')
                 
                 # codes.txt 검사
                 cnt_bib = 0

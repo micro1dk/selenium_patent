@@ -47,8 +47,35 @@ def explorer_folder(markinfo_acc_no):
 #             work_list.append(classify_1)
 # print(work_list)
 
-ff = open(f'testtxt.txt', 'r+', encoding='utf-8')
-lines = ff.readlines()
+# ff = open(f'testtxt.txt', 'r+', encoding='utf-8')
+# lines = ff.readlines()
 
-# tl, tr = lines[0].strip('\n').split(',')
-print(lines[0].strip('\n').split(','))
+# # tl, tr = lines[0].strip('\n').split(',')
+# print(lines[0].strip('\n').split(','))
+
+a = set([1, 2, 3])
+b = set([2, 1, 3, 6])
+
+print(a == b)
+
+from datetime import datetime
+
+now = datetime.now()
+
+
+def get_num_to_str(num):
+    ret = str(num) if num >= 10 else '0' + str(num)
+    return ret
+
+print(now.year)
+print(now.month)
+print(now.day)
+n = int(str(now.year))
+mon = str(now.month) if now.month >= 10 else '0' + str(now.month)
+
+today = str(now.year) + get_num_to_str(now.month) + get_num_to_str(now.day)
+
+age = '20030616'
+man = (int(today) - int(age))//10000
+print(man)
+print(man >= 19)

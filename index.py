@@ -16,9 +16,9 @@ def main():
 
         # keaps.main() # 서식작성기
 
-        # patent.main(browser.driver) # 특허로
+        patent.main(browser.driver) # 특허로
 
-        # admin_upload_files.main(browser.driver) # 자료 업로드
+        admin_upload_files.main(browser.driver) # 자료 업로드
 
     except Exception as e:
         print('본체에러', e)

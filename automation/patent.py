@@ -108,10 +108,12 @@ class Patent(Browser, PyautoGUI):
                 #     continue
                 
                 self.script_patent(f'{FOLDER_DIR}\\{f}', f, pdfs)
+            return True
         except Exception as e:
             Slack.chat('서식상세', '-------------------')
             print(f'폴더 방문 중 에러발생\n{e}')
-            raise Exception(e)
+            # raise Exception(e)
+            return False
 
     def script_patent(self, today_dir, markinfo_acc_no, length):
         txt_file = open(f'{today_dir}\\_codes.txt', 'r+', encoding='utf-8')
@@ -283,17 +285,22 @@ class Patent(Browser, PyautoGUI):
 
 def main(driver):
     try:
-        Slack.chat('서식상세', '=====================< 특허로 시작 >=====================')
-        Slack.chat('서식', '특허로 작업 시작 (2-분류번호.pdf 저장)')
-        patent_page = Patent(driver)
-        patent_page.loop_login()
-        patent_page.visit_folder()
-        total = patent_page.success + patent_page.fail
-        Slack.chat('서식', 
-            f'''
-                특허로 완료, 합: {total} , 성공: {patent_page.success} , 실패: {patent_page.fail} , 폴더방문실패: {patent_page.folder_fail}
-            '''
-        )
+        while True:
+            Slack.chat('서식상세', '=====================< 특허로 시작 >=====================')
+            Slack.chat('서식', '특허로 작업 시작 (2-분류번호.pdf 저장)')
+            patent_page = Patent(driver)
+            patent_page.loop_login()
+            success = patent_page.visit_folder()
+            if not success:
+                Slack.chat('서식상세', '특허로에러 재시작!')
+                continue
+            total = patent_page.success + patent_page.fail
+            Slack.chat('서식', 
+                f'''
+                    특허로 완료, 합: {total} , 성공: {patent_page.success} , 실패: {patent_page.fail} , 폴더방문실패: {patent_page.folder_fail}
+                '''
+            )
+            break
     except Exception as e:
         Slack.chat('서식', '특허로 에러')
         raise Exception(e)

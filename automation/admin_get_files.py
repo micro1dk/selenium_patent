@@ -6,7 +6,7 @@ import shutil
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 
 import requests
-
+from datetime import datetime
 from paths import *
 from classes.selenium_class import Browser
 from classes.pyautogui_class import PyautoGUI
@@ -22,6 +22,7 @@ class GetFiles(Browser, PyautoGUI):
         self.priority_list = []
         self.already_list = []
         self.applicant_name = ''
+        self.folder_fail = 0
 
     def explorer_folder(self, markinfo_acc_no):
         """
@@ -45,7 +46,8 @@ class GetFiles(Browser, PyautoGUI):
             ul_select = self.driver.find_element_by_xpath(
                 '//*[@id="form"]/div[1]/div[1]/div/div[4]/div/ul')
             li_select = ul_select.find_elements_by_tag_name('li')
-            li_select[len(li_select) - 11].click() # 전체는 -1 
+            # li_select[len(li_select) - 11].click() # 전체는 -1 
+            li_select[len(li_select) - 1].click() # 전체는 -1 
             # li_select[0].click() # 전체는 -1 
             # li_select[1].click() # 전체는 -1 
             self.driver.find_element_by_xpath('//*[@id="search"]').click()
@@ -103,8 +105,8 @@ class GetFiles(Browser, PyautoGUI):
 
                         elif mode == 2:
                             # print(wait_list, '대기리스트')
-                            if os.path.isdir(FOLDER_DIR) and len(os.listdir(FOLDER_DIR)) > 30:
-                                Slack.chat('서식상세', '최대 30개 까지')
+                            if os.path.isdir(FOLDER_DIR) and len(os.listdir(FOLDER_DIR)) > 10:
+                                Slack.chat('서식상세', '최대 10개 까지 폴더생성')
                                 return
                             if number in wait_list and number not in complete_list:
                                 complete_list.append(number)
@@ -159,7 +161,7 @@ class GetFiles(Browser, PyautoGUI):
                 table = table_list[i]
                 classify = table.find_element_by_class_name('classify_bib').get_attribute('value')
                 # classify = bib_classifies[i].get_attribute('value')
-                if classify + '류' not in self.pass_list and classify not in self.already_list and classify not in self.priority_list:
+                if classify not in self.pass_list and classify not in self.already_list and classify not in self.priority_list:
                     btn = table.find_element_by_class_name('bib_btn')
                     Slack.chat('서식상세', f'　└        BIB_{classify}.BIB 다운로드')
                     btn.click()
@@ -185,13 +187,13 @@ class GetFiles(Browser, PyautoGUI):
                 if i % 2 == 0:  # 짝수에서 분류코드
                     classify = tr_list[i].find_element_by_xpath(
                         'td[3]/div[1]').text
-                    temp = classify
+                    temp = classify[:-1]
                     state = tr_list[i].find_element_by_xpath(
                         'td[5]/div[2]/span[1]').text
                     if state != '컨펌요청':
-                        self.pass_list.append(classify)
+                        self.pass_list.append(classify[:-1])
                 else:  # 홀수에서 이미지 썸네일
-                    if temp not in self.pass_list and temp[:-1] not in self.already_list and temp[:-1] not in self.priority_list:
+                    if temp not in self.pass_list and temp not in self.already_list and temp not in self.priority_list:
                         src = tr_list[i].find_element_by_tag_name(
                             'img').get_attribute('src')
                         if src == 'https://markinfo.co.kr/common/images/no_image_file.png':
@@ -307,7 +309,7 @@ class GetFiles(Browser, PyautoGUI):
             print('위임장 에러', e)
             raise Exception(f'위임장 다운과정에서 에러\n{e}')
 
-    def check_possiblity(self):
+    def check_possiblity(self, markinfo_acc_num):
         """
         분류검증
         """
@@ -315,7 +317,7 @@ class GetFiles(Browser, PyautoGUI):
         table_container = self.driver.find_element_by_xpath(
             '//*[@id="tab-4"]/div[2]')
 
-        Slack.chat('서식상세', '　└        분류검증, 출원유형, 우심여부 확인')
+        Slack.chat('서식상세', '　└        분류검증, 출원유형, 우심여부, 미성년자 확인')
         temp_list = []
         table_container = self.driver.find_element_by_xpath('//*[@id="tab-4"]/div[2]')
         table_list = table_container.find_elements_by_tag_name('table')
@@ -329,7 +331,7 @@ class GetFiles(Browser, PyautoGUI):
                 if '우심' in s.text:
                     self.priority_list.append(classify)
                     Slack.chat('서식상세', f'　└        {classify}류는 우심이라 pass')
-
+                    # Slack.chat('서식비고', f'{markinfo_acc_num} {classify}류는 우심이라 pass')
             if classify not in temp_list:
                 temp_list.append(classify)
             else:
@@ -342,6 +344,29 @@ class GetFiles(Browser, PyautoGUI):
         if a_type == '외국법인' or a_type == '외국개인' or a_type == '국가기관':
             return False, '외국법인 또는 외국개인 또는 국가기관'
         
+
+        def get_num_to_str(num):
+            ret = str(num) if num >= 10 else '0' + str(num)
+            return ret
+        if a_type == '국내개인':
+            reg_num = self.driver.find_element_by_xpath('//*[@id="tab-2"]/div/table[1]/tbody/tr[5]/td[1]').text
+            reg1, reg2 = reg_num.split('-')
+            
+            
+            now = datetime.now()
+            today = str(now.year) + get_num_to_str(now.month) + get_num_to_str(now.day)
+            if reg1[:2] < str(now.year)[2:] and reg2[1] in (3, 4):
+                age = '20' + reg1
+            else:
+                age = '19' + reg1
+
+            man_age = (int(today) - int(age))//10000
+            print('만나이는', man_age)
+            print(age, today)
+            if man_age < 19:
+                # 미성년자
+                return False, '미성년자입니다'
+
         return True, ''
 
     def detail_page(self, markinfo_acc_num, url=''):
@@ -371,13 +396,26 @@ class GetFiles(Browser, PyautoGUI):
                 os.remove(f'{DOWNLOAD_PATH}\\temp\\{d}')
 
             # 분류검증
-            success, message = self.check_possiblity()
+            success, message = self.check_possiblity(markinfo_acc_num)
 
             if not success:
                 raise Exception(message)
 
-            if len(self.priority_list) > 1:
-                Slack.chat('서식비고', f'{markinfo_acc_num} {self.priority_list} 는 우심')                
+            if len(self.priority_list) >= 1:
+                Slack.chat('서식비고', f'{markinfo_acc_num} {self.priority_list} 는 우심')
+
+            all_classifies = self.driver.find_element_by_xpath('/html/body/div[2]/div/div[3]/div/div[2]/div[1]/table/tbody/tr[2]/td[1]').text
+            all_classifies_list = [ac[:-1] for ac in all_classifies.split(',')]
+
+            # print(set(all_classifies_list), set(self.priority_list)) 
+            if set(all_classifies_list) == set(self.priority_list):
+                if os.path.isdir(f'{DOWNLOAD_PATH}\\{markinfo_acc_num}'):
+                    shutil.rmtree(f'{DOWNLOAD_PATH}\\{markinfo_acc_num}')
+                self.folder_fail += 1
+                self.driver.close()
+                self.driver.switch_to.window(self.driver.window_handles[0])
+
+                return True, ''
 
             # 공유폴더 체크
             exist_classifies, classifies = self.explorer_folder(markinfo_acc_num)
@@ -417,13 +455,13 @@ class GetFiles(Browser, PyautoGUI):
             if bibs == 0:
                 if os.path.isdir(f'{DOWNLOAD_PATH}\\{markinfo_acc_num}'):
                     shutil.rmtree(f'{DOWNLOAD_PATH}\\{markinfo_acc_num}')
+                self.folder_fail += 1
             else:
                 # complete리스트 + 다운완료 bib = 분류리스트
-                all_classifies = self.driver.find_element_by_xpath('/html/body/div[2]/div/div[3]/div/div[2]/div[1]/table/tbody/tr[2]/td[1]').text
-                all_classifies_list = [ac[:-1] for ac in all_classifies.split(',')]
                 f = open(f'{DOWNLOAD_PATH}\\{self.app_num}\\_codes.txt', 'r+', encoding='utf-8')
 
-                sorted_list = list(set(sorted(self.already_list + self.bib_list)) - set(self.pass_list))
+                sorted_list = list(set(sorted(self.already_list + self.bib_list)) | set(self.pass_list))
+                print('===============\n', sorted_list, all_classifies_list)
                 if sorted(sorted_list) == sorted(all_classifies_list):
                     f.seek(0, 0)
                     f.write(f'{self.applicant_name},N\n')
@@ -459,12 +497,12 @@ def main(driver):
     try:
         # Slack.chat('서식', '파일/폴더 저장 시작')
         get_files = GetFiles(driver)
-        # get_files.detail_page(markinfo_acc_num='20210607_0018', url='https://markinfo.co.kr/front/nanmin/phtml/view.php?code=doc&link_page=patent_info2&accept_number=20210607_0018')
+        # get_files.detail_page(markinfo_acc_num='20210610_0049', url='https://markinfo.co.kr/front/nanmin/phtml/view.php?code=doc&link_page=patent_info2&accept_number=20210610_0049')
         get_files.searching()
         total = get_files.success + get_files.fail
         Slack.chat('서식', 
             f'''
-                폴더 + 파일 생성완료, 합: {total} , 성공: {get_files.success} , 실패: {get_files.fail}
+                폴더 + 파일 생성완료, 합: {total} , 성공: {get_files.success - get_files.folder_fail} , 실패: {get_files.fail}, 폴더패스: {get_files.folder_fail}
             '''
         )
     except Exception as e:
